@@ -798,24 +798,6 @@ export default function UserManagementView({
                   >
                     Edit Module Permissions →
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => onSwitchUser(user)}
-                    disabled={isCurrent}
-                    style={{
-                      padding: '0.45rem 0.75rem',
-                      borderRadius: '8px',
-                      border: '1px solid #CBD5E1',
-                      background: isCurrent ? '#F1F5F9' : '#FFF',
-                      fontSize: '0.76rem',
-                      fontWeight: 600,
-                      color: '#334155',
-                      cursor: isCurrent ? 'default' : 'pointer'
-                    }}
-                  >
-                    {isCurrent ? 'Current' : 'Simulate'}
-                  </button>
                 </div>
               </div>
             );

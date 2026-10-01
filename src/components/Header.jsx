@@ -133,66 +133,41 @@ export default function Header({
           </div>
         </div>
 
-        {/* Current User Active Profile & Fast Switcher */}
+        {/* Current User Active Profile (Production Level) */}
         {currentUser && (
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '0.6rem',
+            gap: '0.65rem',
             background: '#F8FAFC',
             border: '1px solid var(--border-subtle)',
             borderRadius: '24px',
-            padding: '0.25rem 0.75rem'
+            padding: '0.3rem 0.85rem',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
           }}>
             <div style={{
-              width: '26px',
-              height: '26px',
+              width: '28px',
+              height: '28px',
               borderRadius: '50%',
-              background: 'var(--accent-indigo)',
+              background: 'linear-gradient(135deg, #4F46E5, #312E81)',
               color: '#FFF',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '0.72rem',
-              fontWeight: 800
+              fontSize: '0.75rem',
+              fontWeight: 800,
+              boxShadow: '0 2px 6px rgba(79,70,229,0.25)'
             }}>
               {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
             </div>
-            <div style={{ lineHeight: '1.1' }}>
-              <div style={{ fontSize: '0.74rem', fontWeight: 700, color: '#0F172A' }}>
-                {currentUser.name.split(' ')[0]}
+            <div style={{ lineHeight: '1.15' }}>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0F172A' }}>
+                {currentUser.name || 'User'}
               </div>
-              <div style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600 }}>
-                {currentUser.role}
+              <div style={{ fontSize: '0.66rem', color: '#6366F1', fontWeight: 700 }}>
+                {currentUser.role || 'Member'}
               </div>
             </div>
-
-            {appUsers.length > 1 && onSwitchUser && (
-              <select
-                value={currentUser.id}
-                onChange={(e) => {
-                  const target = appUsers.find(u => u.id === e.target.value);
-                  if (target) onSwitchUser(target);
-                }}
-                style={{
-                  border: 'none',
-                  background: 'transparent',
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
-                  color: 'var(--accent-indigo)',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  paddingLeft: '0.2rem'
-                }}
-                title="Switch simulated user session"
-              >
-                {appUsers.map(u => (
-                  <option key={u.id} value={u.id}>
-                    Switch: {u.name} ({u.role})
-                  </option>
-                ))}
-              </select>
-            )}
           </div>
         )}
 
