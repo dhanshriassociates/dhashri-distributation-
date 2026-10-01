@@ -130,3 +130,14 @@ CREATE POLICY "Allow public all on payments" ON public.payments FOR ALL TO anon 
 CREATE POLICY "Allow public all on applications" ON public.applications FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public all on overdue_followups" ON public.overdue_followups FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public all on audit_logs" ON public.audit_logs FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- =========================================================
+-- ENABLE REALTIME BROADCASTING FOR ALL TABLES
+-- (Allows instant live updates across all open browsers/devices)
+-- =========================================================
+ALTER PUBLICATION supabase_realtime ADD TABLE public.customers;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.finance_accounts;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.payments;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.applications;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.overdue_followups;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.audit_logs;

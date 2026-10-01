@@ -398,3 +398,158 @@ export async function dbInsertAuditLog(log) {
     console.warn('[Supabase] dbInsertAuditLog warning:', err.message);
   }
 }
+
+// ==========================================
+// 7. REALTIME ENTITY MAPPERS
+// ==========================================
+export function mapCustomer(c) {
+  if (!c) return null;
+  return {
+    id: c.id,
+    name: c.name,
+    phone: c.phone || 'N/A',
+    email: c.email || '',
+    fatherSpouseName: c.father_spouse_name || '',
+    dob: c.dob || '1990-01-01',
+    gender: c.gender || 'Male',
+    aadhaar: c.aadhaar || '',
+    pan: c.pan || '',
+    photo: c.photo || null,
+    kycStatus: c.kyc_status || 'Under Review',
+    addresses: c.addresses || [],
+    employment: c.employment || {},
+    bankAccount: c.bank_account || {},
+    documents: c.documents || [],
+    createdAt: c.created_at
+  };
+}
+
+export function mapFinanceAccount(a) {
+  if (!a) return null;
+  return {
+    id: a.id,
+    applicationId: a.application_id,
+    customerId: a.customer_id,
+    customerName: a.customer_name,
+    customerPhone: a.customer_phone,
+    customerAadhaar: a.customer_aadhaar,
+    customerPan: a.customer_pan,
+    customerPhoto: a.customer_photo,
+    productName: a.product_name,
+    financedAmount: parseFloat(a.financed_amount) || 0,
+    annualRatePct: parseFloat(a.annual_rate_pct) || 0,
+    monthlyRatePct: a.monthly_rate_pct ? parseFloat(a.monthly_rate_pct) : null,
+    dailyRateRupees: a.daily_rate_rupees ? parseFloat(a.daily_rate_rupees) : null,
+    tenureMonths: parseInt(a.tenure_months) || 1,
+    startDate: a.start_date,
+    status: a.status || 'Active',
+    collateralType: a.collateral_type || 'None',
+    collateralDetails: a.collateral_details || '',
+    disbursalMode: a.disbursal_mode || 'Cash',
+    disbursalRef: a.disbursal_ref || '',
+    assignedOfficer: a.assigned_officer || 'Officer',
+    notes: a.notes || '',
+    emiSchedule: a.emi_schedule || [],
+    createdAt: a.created_at
+  };
+}
+
+export function mapPayment(p) {
+  if (!p) return null;
+  return {
+    id: p.id,
+    accountId: p.account_id,
+    customerName: p.customer_name,
+    amount: parseFloat(p.amount) || 0,
+    paymentMode: p.payment_mode || 'Cash',
+    referenceNo: p.reference_no || '',
+    installmentNo: parseInt(p.installment_no) || 1,
+    allocatedPrincipal: parseFloat(p.allocated_principal) || 0,
+    allocatedInterest: parseFloat(p.allocated_interest) || 0,
+    receivedBy: p.received_by || 'Cashier',
+    receiptNo: p.receipt_no || '',
+    timestamp: p.timestamp
+  };
+}
+
+export function mapApplication(a) {
+  if (!a) return null;
+  return {
+    id: a.id,
+    customerId: a.customer_id,
+    customerName: a.customer_name,
+    productId: a.product_id,
+    productName: a.product_name,
+    requestedAmount: parseFloat(a.requested_amount) || 0,
+    tenureMonths: parseInt(a.tenure_months) || 12,
+    annualRatePct: parseFloat(a.annual_rate_pct) || 0,
+    calculatedEmi: parseFloat(a.calculated_emi) || 0,
+    status: a.status || 'Under Review',
+    reviewerComment: a.reviewer_comment || '',
+    reviewedBy: a.reviewed_by || null,
+    createdAt: a.created_at?.split('T')[0] || new Date().toISOString().split('T')[0]
+  };
+}
+
+export function mapFollowup(f) {
+  if (!f) return null;
+  return {
+    id: f.id,
+    accountId: f.account_id,
+    customerName: f.customer_name,
+    agingBucket: f.aging_bucket,
+    overdueDays: parseInt(f.overdue_days) || 0,
+    amountDue: parseFloat(f.amount_due) || 0,
+    contactMethod: f.contact_method,
+    outcome: f.outcome,
+    promiseDate: f.promise_date,
+    assignedAgent: f.assigned_agent,
+    lastContactDate: f.last_contact_date,
+    notes: f.notes
+  };
+}
+
+export function mapAuditLog(l) {
+  if (!l) return null;
+  return {
+    id: l.id,
+    actor: l.actor,
+    action: l.action,
+    target: l.target,
+    timestamp: l.timestamp,
+    ip: l.ip || '127.0.0.1'
+  };
+}
+
+// ==========================================
+// 8. LIVE REALTIME SUBSCRIPTION
+// ==========================================
+export function subscribeToAllRealtime(callbacks = {}) {
+  const channel = supabase
+    .channel('fms_global_realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, (payload) => {
+      if (callbacks.onCustomerChange) callbacks.onCustomerChange(payload);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'finance_accounts' }, (payload) => {
+      if (callbacks.onAccountChange) callbacks.onAccountChange(payload);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, (payload) => {
+      if (callbacks.onPaymentChange) callbacks.onPaymentChange(payload);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'applications' }, (payload) => {
+      if (callbacks.onApplicationChange) callbacks.onApplicationChange(payload);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'overdue_followups' }, (payload) => {
+      if (callbacks.onFollowupChange) callbacks.onFollowupChange(payload);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'audit_logs' }, (payload) => {
+      if (callbacks.onAuditChange) callbacks.onAuditChange(payload);
+    })
+    .subscribe((status) => {
+      if (callbacks.onStatusChange) callbacks.onStatusChange(status);
+    });
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}

@@ -38,7 +38,14 @@ import {
   dbFetchOverdueFollowups,
   dbInsertFollowup,
   dbFetchAuditLogs,
-  dbInsertAuditLog
+  dbInsertAuditLog,
+  subscribeToAllRealtime,
+  mapCustomer,
+  mapFinanceAccount,
+  mapPayment,
+  mapApplication,
+  mapFollowup,
+  mapAuditLog
 } from './lib/supabaseClient';
 
 export default function App() {
@@ -174,6 +181,112 @@ export default function App() {
     }
 
     syncFromSupabase();
+
+    // Live Real-Time Multi-Device Cloud Sync
+    const unsubscribe = subscribeToAllRealtime({
+      onCustomerChange: (payload) => {
+        if (payload.eventType === 'DELETE') {
+          setCustomers(prev => prev.filter(c => c.id !== payload.old?.id));
+        } else if (payload.new) {
+          const mapped = mapCustomer(payload.new);
+          if (mapped) {
+            setCustomers(prev => {
+              const idx = prev.findIndex(c => c.id === mapped.id);
+              if (idx >= 0) {
+                const updated = [...prev];
+                updated[idx] = mapped;
+                return updated;
+              }
+              return [mapped, ...prev];
+            });
+          }
+        }
+      },
+      onAccountChange: (payload) => {
+        if (payload.eventType === 'DELETE') {
+          setFinanceAccounts(prev => prev.filter(a => a.id !== payload.old?.id));
+        } else if (payload.new) {
+          const mapped = mapFinanceAccount(payload.new);
+          if (mapped) {
+            setFinanceAccounts(prev => {
+              const idx = prev.findIndex(a => a.id === mapped.id);
+              if (idx >= 0) {
+                const updated = [...prev];
+                updated[idx] = mapped;
+                return updated;
+              }
+              return [mapped, ...prev];
+            });
+          }
+        }
+      },
+      onPaymentChange: (payload) => {
+        if (payload.eventType === 'DELETE') {
+          setPayments(prev => prev.filter(p => p.id !== payload.old?.id));
+        } else if (payload.new) {
+          const mapped = mapPayment(payload.new);
+          if (mapped) {
+            setPayments(prev => {
+              const idx = prev.findIndex(p => p.id === mapped.id);
+              if (idx >= 0) {
+                const updated = [...prev];
+                updated[idx] = mapped;
+                return updated;
+              }
+              return [mapped, ...prev];
+            });
+          }
+        }
+      },
+      onApplicationChange: (payload) => {
+        if (payload.eventType === 'DELETE') {
+          setApplications(prev => prev.filter(a => a.id !== payload.old?.id));
+        } else if (payload.new) {
+          const mapped = mapApplication(payload.new);
+          if (mapped) {
+            setApplications(prev => {
+              const idx = prev.findIndex(a => a.id === mapped.id);
+              if (idx >= 0) {
+                const updated = [...prev];
+                updated[idx] = mapped;
+                return updated;
+              }
+              return [mapped, ...prev];
+            });
+          }
+        }
+      },
+      onFollowupChange: (payload) => {
+        if (payload.eventType === 'DELETE') {
+          setOverdueFollowups(prev => prev.filter(f => f.id !== payload.old?.id));
+        } else if (payload.new) {
+          const mapped = mapFollowup(payload.new);
+          if (mapped) {
+            setOverdueFollowups(prev => {
+              const idx = prev.findIndex(f => f.id === mapped.id);
+              if (idx >= 0) {
+                const updated = [...prev];
+                updated[idx] = mapped;
+                return updated;
+              }
+              return [mapped, ...prev];
+            });
+          }
+        }
+      },
+      onAuditChange: (payload) => {
+        if (payload.new) {
+          const mapped = mapAuditLog(payload.new);
+          if (mapped) {
+            setAuditLogs(prev => [mapped, ...prev]);
+          }
+        }
+      }
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   // LocalStorage Cache (Dual resilience & offline safety)
