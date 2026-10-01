@@ -125,6 +125,20 @@ CREATE TABLE IF NOT EXISTS public.staff_members (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 8. SYSTEM USERS & MODULE PERMISSIONS TABLE
+CREATE TABLE IF NOT EXISTS public.app_users (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    phone TEXT,
+    role TEXT DEFAULT 'Custom',
+    passcode TEXT DEFAULT '1234',
+    status TEXT DEFAULT 'Active',
+    allowed_modules JSONB DEFAULT '["dashboard"]'::jsonb,
+    permissions JSONB DEFAULT '{"canDisburseLoan": false, "canCollectPayment": false, "canApproveLoan": false, "canDeleteRecords": false, "canExportReports": false}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =========================================================
 -- ENABLE ROW LEVEL SECURITY (RLS) & ALLOW PUBLIC ACCESS
 -- (For publishable anon client key access)
@@ -137,6 +151,7 @@ ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.overdue_followups ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.staff_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.app_users ENABLE ROW LEVEL SECURITY;
 
 -- Permissive policies for anon role (Publishable Key Access)
 CREATE POLICY "Allow public all on customers" ON public.customers FOR ALL TO anon USING (true) WITH CHECK (true);
@@ -146,6 +161,7 @@ CREATE POLICY "Allow public all on applications" ON public.applications FOR ALL 
 CREATE POLICY "Allow public all on overdue_followups" ON public.overdue_followups FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public all on audit_logs" ON public.audit_logs FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public all on staff_members" ON public.staff_members FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public all on app_users" ON public.app_users FOR ALL TO anon USING (true) WITH CHECK (true);
 
 -- =========================================================
 -- ENABLE REALTIME BROADCASTING FOR ALL TABLES
@@ -158,3 +174,5 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.applications;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.overdue_followups;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.audit_logs;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.staff_members;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.app_users;
+

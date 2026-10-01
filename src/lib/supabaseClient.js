@@ -474,6 +474,149 @@ export async function dbDeleteStaffMember(staffId) {
 }
 
 // ==========================================
+// 8. APP USERS & MODULE ACCESS SERVICE
+// ==========================================
+export const INITIAL_APP_USERS = [
+  {
+    id: 'USR-001',
+    name: 'Admin Master (Owner)',
+    email: 'admin@dhanshri.com',
+    phone: '+91 98765 43210',
+    role: 'Admin',
+    passcode: '1234',
+    status: 'Active',
+    allowedModules: [
+      'dashboard', 'dailyRoute', 'customer360', 'staff', 'userManagement',
+      'onboarding', 'applications', 'payments', 'overdue', 'products', 'rbac', 'audit'
+    ],
+    permissions: {
+      canDisburseLoan: true,
+      canCollectPayment: true,
+      canApproveLoan: true,
+      canDeleteRecords: true,
+      canExportReports: true
+    },
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'USR-002',
+    name: 'Rajesh Verma (Field Recovery)',
+    email: 'rajesh.agent@dhanshri.com',
+    phone: '+91 98111 22233',
+    role: 'Field Collection Agent',
+    passcode: '2233',
+    status: 'Active',
+    allowedModules: ['dashboard', 'dailyRoute', 'payments', 'overdue'],
+    permissions: {
+      canDisburseLoan: false,
+      canCollectPayment: true,
+      canApproveLoan: false,
+      canDeleteRecords: false,
+      canExportReports: false
+    },
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'USR-003',
+    name: 'Priya Sharma (Credit Underwriter)',
+    email: 'priya.credit@dhanshri.com',
+    phone: '+91 98222 33344',
+    role: 'Credit Underwriter',
+    passcode: '3344',
+    status: 'Active',
+    allowedModules: ['dashboard', 'customer360', 'onboarding', 'applications'],
+    permissions: {
+      canDisburseLoan: true,
+      canCollectPayment: false,
+      canApproveLoan: true,
+      canDeleteRecords: false,
+      canExportReports: true
+    },
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'USR-004',
+    name: 'Amit Patel (Cashier)',
+    email: 'amit.cashier@dhanshri.com',
+    phone: '+91 98333 44455',
+    role: 'Cashier',
+    passcode: '4455',
+    status: 'Active',
+    allowedModules: ['dashboard', 'dailyRoute', 'payments'],
+    permissions: {
+      canDisburseLoan: false,
+      canCollectPayment: true,
+      canApproveLoan: false,
+      canDeleteRecords: false,
+      canExportReports: false
+    },
+    createdAt: new Date().toISOString()
+  }
+];
+
+export async function dbFetchAppUsers() {
+  try {
+    const { data, error } = await supabase
+      .from('app_users')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      // Seed initial users if table is empty
+      const local = localStorage.getItem('prd_app_users');
+      const seedList = local ? JSON.parse(local) : INITIAL_APP_USERS;
+      for (const u of seedList) {
+        await dbInsertAppUser(u);
+      }
+      return seedList;
+    }
+
+    return data.map(mapAppUser);
+  } catch (err) {
+    console.warn('[Supabase] dbFetchAppUsers fallback to local cache:', err.message);
+    const local = localStorage.getItem('prd_app_users');
+    return local ? JSON.parse(local) : INITIAL_APP_USERS;
+  }
+}
+
+export async function dbInsertAppUser(user) {
+  try {
+    const row = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone || '',
+      role: user.role || 'Custom',
+      passcode: user.passcode || '1234',
+      status: user.status || 'Active',
+      allowed_modules: user.allowedModules || ['dashboard'],
+      permissions: user.permissions || {
+        canDisburseLoan: false,
+        canCollectPayment: false,
+        canApproveLoan: false,
+        canDeleteRecords: false,
+        canExportReports: false
+      }
+    };
+
+    const { error } = await supabase.from('app_users').upsert(row);
+    if (error) throw error;
+  } catch (err) {
+    console.warn('[Supabase] dbInsertAppUser warning:', err.message);
+  }
+}
+
+export async function dbDeleteAppUser(userId) {
+  try {
+    const { error } = await supabase.from('app_users').delete().eq('id', userId);
+    if (error) throw error;
+  } catch (err) {
+    console.warn('[Supabase] dbDeleteAppUser warning:', err.message);
+  }
+}
+
+// ==========================================
 // 8. REALTIME ENTITY MAPPERS
 // ==========================================
 export function mapCustomer(c) {
@@ -615,6 +758,28 @@ export function mapStaff(s) {
   };
 }
 
+export function mapAppUser(u) {
+  if (!u) return null;
+  return {
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    phone: u.phone || '',
+    role: u.role || 'Custom',
+    passcode: u.passcode || '1234',
+    status: u.status || 'Active',
+    allowedModules: u.allowed_modules || ['dashboard'],
+    permissions: u.permissions || {
+      canDisburseLoan: false,
+      canCollectPayment: false,
+      canApproveLoan: false,
+      canDeleteRecords: false,
+      canExportReports: false
+    },
+    createdAt: u.created_at
+  };
+}
+
 // ==========================================
 // 8. LIVE REALTIME SUBSCRIPTION
 // ==========================================
@@ -642,6 +807,9 @@ export function subscribeToAllRealtime(callbacks = {}) {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_members' }, (payload) => {
       if (callbacks.onStaffChange) callbacks.onStaffChange(payload);
     })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'app_users' }, (payload) => {
+      if (callbacks.onUserChange) callbacks.onUserChange(payload);
+    })
     .subscribe((status) => {
       if (callbacks.onStatusChange) callbacks.onStatusChange(status);
     });
@@ -650,3 +818,4 @@ export function subscribeToAllRealtime(callbacks = {}) {
     supabase.removeChannel(channel);
   };
 }
+

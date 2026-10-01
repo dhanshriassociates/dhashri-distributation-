@@ -11,6 +11,7 @@ import RbacPermissionsView from './components/RbacPermissionsView';
 import AuditLogsView from './components/AuditLogsView';
 import DailyCollectionsRouteView from './components/DailyCollectionsRouteView';
 import StaffManagerView from './components/StaffManagerView';
+import UserManagementView from './components/UserManagementView';
 import DisburseLoanModal from './components/DisburseLoanModal';
 import PassbookModal from './components/PassbookModal';
 
@@ -44,6 +45,10 @@ import {
   dbFetchStaffMembers,
   dbInsertStaffMember,
   dbDeleteStaffMember,
+  INITIAL_APP_USERS,
+  dbFetchAppUsers,
+  dbInsertAppUser,
+  dbDeleteAppUser,
   subscribeToAllRealtime,
   mapCustomer,
   mapFinanceAccount,
@@ -51,7 +56,8 @@ import {
   mapApplication,
   mapFollowup,
   mapAuditLog,
-  mapStaff
+  mapStaff,
+  mapAppUser
 } from './lib/supabaseClient';
 
 export default function App() {
@@ -180,6 +186,20 @@ export default function App() {
     ];
   });
 
+  // System Users & Module Permissions States
+  const [appUsers, setAppUsers] = useState(() => {
+    const saved = localStorage.getItem('prd_app_users');
+    return saved ? JSON.parse(saved) : INITIAL_APP_USERS;
+  });
+
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('prd_current_user');
+    if (saved) {
+      try { return JSON.parse(saved); } catch {}
+    }
+    return INITIAL_APP_USERS[0];
+  });
+
   // Modal States
   const [isDisburseLoanOpen, setIsDisburseLoanOpen] = useState(false);
   const [passbookAccount, setPassbookAccount] = useState(null);
@@ -192,14 +212,15 @@ export default function App() {
         const testRes = await testSupabaseConnection();
         setIsDbConnected(testRes.connected);
 
-        const [dbCusts, dbAccs, dbPays, dbApps, dbFols, dbAuds, dbStaff] = await Promise.all([
+        const [dbCusts, dbAccs, dbPays, dbApps, dbFols, dbAuds, dbStaff, dbUsers] = await Promise.all([
           dbFetchCustomers(),
           dbFetchFinanceAccounts(),
           dbFetchPayments(),
           dbFetchApplications(),
           dbFetchOverdueFollowups(),
           dbFetchAuditLogs(),
-          dbFetchStaffMembers()
+          dbFetchStaffMembers(),
+          dbFetchAppUsers()
         ]);
 
         if (dbCusts && dbCusts.length > 0) setCustomers(dbCusts);
@@ -209,6 +230,10 @@ export default function App() {
         if (dbFols && dbFols.length > 0) setOverdueFollowups(dbFols);
         if (dbAuds && dbAuds.length > 0) setAuditLogs(dbAuds);
         if (dbStaff && dbStaff.length > 0) setStaffMembers(dbStaff);
+        if (dbUsers && dbUsers.length > 0) {
+          setAppUsers(dbUsers);
+          setCurrentUser(prev => dbUsers.find(u => u.id === prev?.id) || dbUsers[0]);
+        }
       } catch (err) {
         console.warn('Initial cloud DB sync notice:', err);
       } finally {
@@ -335,6 +360,25 @@ export default function App() {
             });
           }
         }
+      },
+      onUserChange: (payload) => {
+        if (payload.eventType === 'DELETE') {
+          setAppUsers(prev => prev.filter(u => u.id !== payload.old?.id));
+        } else if (payload.new) {
+          const mapped = mapAppUser(payload.new);
+          if (mapped) {
+            setAppUsers(prev => {
+              const idx = prev.findIndex(u => u.id === mapped.id);
+              if (idx >= 0) {
+                const updated = [...prev];
+                updated[idx] = mapped;
+                return updated;
+              }
+              return [mapped, ...prev];
+            });
+            setCurrentUser(prev => prev?.id === mapped.id ? mapped : prev);
+          }
+        }
       }
     });
 
@@ -367,6 +411,51 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('prd_staff', JSON.stringify(staffMembers));
   }, [staffMembers]);
+
+  useEffect(() => {
+    localStorage.setItem('prd_app_users', JSON.stringify(appUsers));
+  }, [appUsers]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('prd_current_user', JSON.stringify(currentUser));
+    }
+  }, [currentUser]);
+
+  // System User Handlers (Save, Delete, Simulate/Switch with Supabase DB sync)
+  const handleSaveAppUser = (user) => {
+    setAppUsers(prev => {
+      const idx = prev.findIndex(u => u.id === user.id);
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = user;
+        return updated;
+      }
+      return [user, ...prev];
+    });
+    if (currentUser?.id === user.id) {
+      setCurrentUser(user);
+    }
+    dbInsertAppUser(user);
+    logAuditEvent(currentUser?.name || 'Admin Master', 'USER_PERMISSIONS_SAVED', `User ${user.id} (${user.name}) - Role: ${user.role}, Modules: ${(user.allowedModules || []).join(', ')}`);
+  };
+
+  const handleDeleteAppUser = (userId) => {
+    const targetUser = appUsers.find(u => u.id === userId);
+    setAppUsers(prev => prev.filter(u => u.id !== userId));
+    dbDeleteAppUser(userId);
+    logAuditEvent(currentUser?.name || 'Admin Master', 'USER_ACCOUNT_REMOVED', `User ${userId} (${targetUser?.name || 'User'})`);
+  };
+
+  const handleSwitchUser = (user) => {
+    setCurrentUser(user);
+    localStorage.setItem('prd_current_user', JSON.stringify(user));
+    // If target user doesn't have permission for current activeView, route them safely to their first allowed module
+    if (user.allowedModules && user.allowedModules.length > 0 && !user.allowedModules.includes(activeView)) {
+      setActiveView(user.allowedModules[0]);
+    }
+    logAuditEvent(user.name, 'USER_SESSION_SIMULATED', `Switched active session to ${user.name} (${user.role})`);
+  };
 
   // Staff Handlers (Save & Delete with Supabase DB sync)
   const handleSaveStaffMember = (staff) => {
@@ -615,6 +704,9 @@ export default function App() {
         onOpenDisburseLoan={() => setIsDisburseLoanOpen(true)}
         isDbConnected={isDbConnected}
         isDbLoading={isDbLoading}
+        currentUser={currentUser}
+        appUsers={appUsers}
+        onSwitchUser={handleSwitchUser}
       />
 
       {/* Main Container */}
@@ -714,6 +806,16 @@ export default function App() {
             payments={payments}
             onSaveStaffMember={handleSaveStaffMember}
             onDeleteStaffMember={handleDeleteStaffMember}
+          />
+        )}
+
+        {activeView === 'userManagement' && (
+          <UserManagementView
+            appUsers={appUsers}
+            currentUser={currentUser}
+            onSwitchUser={handleSwitchUser}
+            onSaveUser={handleSaveAppUser}
+            onDeleteUser={handleDeleteAppUser}
           />
         )}
 

@@ -28,12 +28,38 @@ export default function Header({
   auditCount,
   onOpenDisburseLoan,
   isDbConnected = true,
-  isDbLoading = false
+  isDbLoading = false,
+  currentUser,
+  appUsers = [],
+  onSwitchUser
 }) {
   const roles = [
     { id: 'admin', label: '👑 Admin (Owner)', color: '#4F46E5' },
     { id: 'employee', label: '👔 Employee / Staff', color: '#059669' }
   ];
+
+  const ALL_TABS = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'dailyRoute', label: "Today's Route", icon: CalendarCheck },
+    { id: 'customer360', label: 'Borrowers 360', icon: Users },
+    { id: 'staff', label: 'Staff & Team', icon: UserCheck },
+    { id: 'userManagement', label: 'User Access', icon: ShieldCheck },
+    { id: 'onboarding', label: '+ Onboard', icon: UserPlus },
+    { id: 'applications', label: 'Applications', icon: FileCheck },
+    { id: 'payments', label: 'Payments', icon: Receipt },
+    { id: 'overdue', label: 'Overdue Aging', icon: AlertTriangle },
+    { id: 'products', label: 'Products', icon: CreditCard },
+    { id: 'rbac', label: 'RBAC Matrix', icon: Sliders },
+    { id: 'audit', label: 'Audit Logs', icon: FileText }
+  ];
+
+  // Granular Module Permission Filter
+  // Only render tabs that the current active user is authorized to access
+  const userAllowedModules = currentUser?.allowedModules || ALL_TABS.map(t => t.id);
+  const visibleTabs = ALL_TABS.filter(tab => userAllowedModules.includes(tab.id));
+
+  // Check if current user has permission to disburse loans
+  const canDisburse = currentUser?.permissions ? currentUser.permissions.canDisburseLoan : true;
 
   return (
     <header style={{
@@ -92,83 +118,102 @@ export default function Header({
           </div>
         </div>
 
-        {/* Admin & Employee Role Switcher */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.3rem',
-          background: '#F1F5F9',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: '24px',
-          padding: '0.2rem'
-        }}>
-          {roles.map(r => (
-            <button
-              key={r.id}
-              onClick={() => setActiveRole(r.id)}
-              style={{
-                padding: '0.35rem 0.85rem',
-                borderRadius: '18px',
-                border: 'none',
-                fontSize: '0.78rem',
-                fontWeight: activeRole === r.id ? 700 : 500,
-                color: activeRole === r.id ? '#FFF' : 'var(--text-muted)',
-                background: activeRole === r.id ? r.color : 'transparent',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                boxShadow: activeRole === r.id ? `0 2px 8px ${r.color}44` : 'none'
-              }}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
+        {/* Current User Active Profile & Fast Switcher */}
+        {currentUser && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.6rem',
+            background: '#F8FAFC',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '24px',
+            padding: '0.25rem 0.75rem'
+          }}>
+            <div style={{
+              width: '26px',
+              height: '26px',
+              borderRadius: '50%',
+              background: 'var(--accent-indigo)',
+              color: '#FFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.72rem',
+              fontWeight: 800
+            }}>
+              {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+            </div>
+            <div style={{ lineHeight: '1.1' }}>
+              <div style={{ fontSize: '0.74rem', fontWeight: 700, color: '#0F172A' }}>
+                {currentUser.name.split(' ')[0]}
+              </div>
+              <div style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600 }}>
+                {currentUser.role}
+              </div>
+            </div>
 
-        {/* Navigation Tabs (Admin & Employee) */}
+            {appUsers.length > 1 && onSwitchUser && (
+              <select
+                value={currentUser.id}
+                onChange={(e) => {
+                  const target = appUsers.find(u => u.id === e.target.value);
+                  if (target) onSwitchUser(target);
+                }}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  color: 'var(--accent-indigo)',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  paddingLeft: '0.2rem'
+                }}
+                title="Switch simulated user session"
+              >
+                {appUsers.map(u => (
+                  <option key={u.id} value={u.id}>
+                    Switch: {u.name} ({u.role})
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        )}
+
+        {/* Navigation Tabs (Dynamically filtered by user permissions) */}
         <nav style={{ display: 'flex', gap: '0.25rem', background: '#F1F5F9', padding: '0.25rem', borderRadius: 'var(--radius-md)', overflowX: 'auto' }}>
-          {[
-            { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-            { id: 'dailyRoute', label: "Today's Route", icon: CalendarCheck },
-            { id: 'customer360', label: 'Borrowers 360', icon: Users },
-            { id: 'staff', label: 'Staff & Team', icon: UserCheck },
-            { id: 'onboarding', label: '+ Onboard', icon: UserPlus },
-            { id: 'applications', label: 'Applications', icon: FileCheck },
-            { id: 'payments', label: 'Payments', icon: Receipt },
-            { id: 'overdue', label: 'Overdue Aging', icon: AlertTriangle },
-            { id: 'products', label: 'Products', icon: CreditCard },
-            { id: 'rbac', label: 'RBAC Matrix', icon: Sliders },
-            { id: 'audit', label: 'Audit Logs', icon: FileText }
-          ].map(tab => {
-              const Icon = tab.icon;
-              const isActive = activeView === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveView(tab.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                    padding: '0.4rem 0.75rem',
-                    borderRadius: 'var(--radius-sm)',
-                    border: 'none',
-                    fontSize: '0.78rem',
-                    fontWeight: isActive ? 600 : 500,
-                    color: isActive ? '#FFF' : 'var(--text-muted)',
-                    background: isActive ? 'var(--accent-indigo)' : 'transparent',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  <Icon size={13} /> {tab.label}
-                </button>
-              );
-            })}
-          </nav>
+          {visibleTabs.map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeView === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveView(tab.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  padding: '0.4rem 0.75rem',
+                  borderRadius: 'var(--radius-sm)',
+                  border: 'none',
+                  fontSize: '0.78rem',
+                  fontWeight: isActive ? 600 : 500,
+                  color: isActive ? '#FFF' : 'var(--text-muted)',
+                  background: isActive ? 'var(--accent-indigo)' : 'transparent',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <Icon size={13} /> {tab.label}
+              </button>
+            );
+          })}
+        </nav>
 
         {/* Quick Loan Button & Global Search */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          {onOpenDisburseLoan && (
+          {onOpenDisburseLoan && canDisburse && (
             <button
               onClick={onOpenDisburseLoan}
               className="btn-emerald"
