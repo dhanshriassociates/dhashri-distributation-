@@ -15,6 +15,11 @@ import UserManagementView from './components/UserManagementView';
 import LoginPage from './components/LoginPage';
 import DisburseLoanModal from './components/DisburseLoanModal';
 import PassbookModal from './components/PassbookModal';
+import CashierDayBookView from './components/CashierDayBookView';
+import AnalyticsView from './components/AnalyticsView';
+import CalendarView from './components/CalendarView';
+import DocsView from './components/DocsView';
+import ByajCalculatorView from './components/ByajCalculatorView';
 
 import { 
   INITIAL_ROLES, 
@@ -836,6 +841,49 @@ export default function App() {
             onSavePayment={handleSavePayment}
             onSaveFollowupNote={handleSaveFollowupNote}
             onOpenPassbook={(acc) => setPassbookAccount(acc)}
+          />
+        )}
+
+        {activeView === 'dayBook' && (
+          <CashierDayBookView
+            payments={payments}
+            financeAccounts={financeAccounts}
+            staffMembers={staffMembers}
+            currentUser={currentUser}
+          />
+        )}
+
+        {activeView === 'analytics' && (
+          <AnalyticsView
+            financeAccounts={financeAccounts}
+            payments={payments}
+            customers={customers}
+            staffMembers={staffMembers}
+            overdueFollowups={overdueFollowups}
+          />
+        )}
+
+        {activeView === 'calendar' && (
+          <CalendarView
+            financeAccounts={financeAccounts}
+            payments={payments}
+            onOpenCollectPayment={() => setActiveView('payments')}
+            onOpenPassbook={(acc) => setPassbookAccount(acc)}
+          />
+        )}
+
+        {activeView === 'docsVault' && (
+          <DocsView
+            customers={customers}
+            financeAccounts={financeAccounts}
+            onVerifyDocument={handleVerifyDocument}
+            onRejectDocument={handleRejectDocument}
+          />
+        )}
+
+        {activeView === 'byajCalc' && (
+          <ByajCalculatorView
+            onOpenDisburseLoan={() => setIsDisburseLoanOpen(true)}
           />
         )}
 

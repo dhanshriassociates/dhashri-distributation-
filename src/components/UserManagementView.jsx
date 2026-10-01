@@ -29,7 +29,12 @@ import {
   Shield,
   Layers,
   CheckSquare,
-  Square
+  Square,
+  Wallet,
+  BarChart3,
+  Calendar,
+  Calculator,
+  FolderCheck
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -38,10 +43,15 @@ export const AVAILABLE_MODULES = [
   { id: 'dailyRoute', label: "Today's Route (Due Sheet)", desc: 'Daily dues, who pays today, 1-click collection & skip', icon: CalendarCheck },
   { id: 'customer360', label: 'Borrowers 360 & KYC', desc: 'Borrower dossier, loan passbook, Aadhaar/PAN documents', icon: Users },
   { id: 'staff', label: 'Staff & Team Manager', desc: 'Field agent rosters, recovery targets & route territory assignments', icon: UserCheck },
+  { id: 'dayBook', label: 'Cashier Day-Book & Handover', desc: 'Daily cash drawer balance, agent cash handover & evening tally', icon: Wallet },
+  { id: 'analytics', label: 'Portfolio Analytics & PAR', desc: 'PAR 30/60/90, collection efficiency, agent performance leaderboard', icon: BarChart3 },
+  { id: 'calendar', label: 'Installment Due Calendar', desc: 'Day-wise due dates, scheduled repayments & WhatsApp reminders', icon: Calendar },
   { id: 'onboarding', label: '+ Onboard Borrower', desc: 'Full KYC intake wizard for new borrower registrations', icon: UserPlus },
-  { id: 'applications', label: 'Loan Applications', desc: 'Credit underwriting workflow, appraisal & loan approval', icon: FileCheck },
+  { id: 'applications', label: 'Loan Applications & LOS', desc: 'Credit underwriting workflow, appraisal & loan approval', icon: FileCheck },
   { id: 'payments', label: 'Payments Ledger', desc: 'Receipt logging, interest/principal split & ledger transactions', icon: Receipt },
-  { id: 'overdue', label: 'Overdue Collections', desc: 'Aging buckets, call notes & recovery promises to pay', icon: AlertTriangle },
+  { id: 'overdue', label: 'Overdue Collections & NPA', desc: 'Aging buckets, call notes & recovery promises to pay', icon: AlertTriangle },
+  { id: 'byajCalc', label: 'Byaj & EMI Calculator', desc: 'Daily 100-day scheme, monthly flat byaj & reducing EMI quotation', icon: Calculator },
+  { id: 'docsVault', label: 'KYC & Legal Document Vault', desc: 'Aadhaar cards, PAN verification, signed promissory notes', icon: FolderCheck },
   { id: 'products', label: 'Finance Products', desc: 'Daily/Monthly byaj rules & interest rate configurations', icon: CreditCard },
   { id: 'userManagement', label: 'Admin Panel & Access', desc: 'User management, module permissions and access control', icon: ShieldCheck },
   { id: 'rbac', label: 'RBAC Matrix', desc: 'Static security policies & role matrix overview', icon: Sliders },

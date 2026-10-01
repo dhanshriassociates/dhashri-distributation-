@@ -16,7 +16,12 @@ import {
   Bell,
   CalendarCheck,
   UserCheck,
-  LogOut
+  LogOut,
+  Wallet,
+  BarChart3,
+  Calendar,
+  Calculator,
+  FolderCheck
 } from 'lucide-react';
 
 export default function Header({
@@ -44,13 +49,18 @@ export default function Header({
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'dailyRoute', label: "Today's Route", icon: CalendarCheck },
     { id: 'customer360', label: 'Borrowers 360', icon: Users },
-    { id: 'staff', label: 'Staff & Team', icon: UserCheck },
-    { id: 'userManagement', label: 'User Access', icon: ShieldCheck },
     { id: 'onboarding', label: '+ Onboard', icon: UserPlus },
     { id: 'applications', label: 'Applications', icon: FileCheck },
     { id: 'payments', label: 'Payments', icon: Receipt },
+    { id: 'dayBook', label: 'Day-Book', icon: Wallet },
     { id: 'overdue', label: 'Overdue Aging', icon: AlertTriangle },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'calendar', label: 'Due Calendar', icon: Calendar },
+    { id: 'byajCalc', label: 'Byaj Calc', icon: Calculator },
+    { id: 'docsVault', label: 'KYC Vault', icon: FolderCheck },
+    { id: 'staff', label: 'Staff & Team', icon: UserCheck },
     { id: 'products', label: 'Products', icon: CreditCard },
+    { id: 'userManagement', label: 'User Access', icon: ShieldCheck },
     { id: 'rbac', label: 'RBAC Matrix', icon: Sliders },
     { id: 'audit', label: 'Audit Logs', icon: FileText }
   ];
