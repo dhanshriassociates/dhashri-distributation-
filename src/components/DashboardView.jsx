@@ -110,10 +110,10 @@ export default function DashboardView({
             {todayStr}
           </div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF', margin: '0.2rem 0 0 0' }}>
-            {greeting}, {currentUser?.name?.split(' ')[0] || 'Admin'} 👋
+            {greeting}, {currentUser?.name?.split(' ')[0] || 'Admin'}
           </h2>
           <p style={{ fontSize: '0.78rem', color: '#A5B4FC', margin: '0.2rem 0 0 0' }}>
-            {customers.length} Borrowers • {activeAccounts.length} Active Loans • {overdueAccountsCount > 0 ? `⚠️ ${overdueAccountsCount} Overdue` : '✓ Portfolio Healthy'}
+            {customers.length} Borrowers • {activeAccounts.length} Active Loans • {overdueAccountsCount > 0 ? `Warning: ${overdueAccountsCount} Overdue` : 'Portfolio Healthy'}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
@@ -138,7 +138,7 @@ export default function DashboardView({
               display: 'flex', alignItems: 'center', gap: '0.35rem',
               transition: 'all 0.2s'
             }}>
-              💵 Collect Payment
+              Collect Payment
             </button>
           )}
           <button onClick={() => onNavigateTo('dailyRoute')} style={{
@@ -149,7 +149,7 @@ export default function DashboardView({
             display: 'flex', alignItems: 'center', gap: '0.35rem',
             transition: 'all 0.2s'
           }}>
-            📅 Today's Route
+            Today's Route
           </button>
         </div>
       </div>
@@ -458,7 +458,7 @@ export default function DashboardView({
             {overdueAccountsCount}
           </h2>
           <span style={{ fontSize: '0.72rem', color: overdueAccountsCount > 0 ? '#DC2626' : '#059669', fontWeight: 600, marginTop: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-            {overdueAccountsCount > 0 ? '⚠️ Action Required' : '✓ Portfolio Healthy'} <ChevronRight size={11} />
+            {overdueAccountsCount > 0 ? 'Action Required' : 'Portfolio Healthy'} <ChevronRight size={11} />
           </span>
         </div>
 

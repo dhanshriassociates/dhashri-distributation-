@@ -277,23 +277,25 @@ export default function LoginPage({
                 transition: 'all 0.2s ease', textAlign: 'left'
               }}
             >
-              <span style={{ fontSize: '1.1rem' }}>👑</span>
-              <div>
-                <div style={{ fontWeight: 800 }}>Admin Master — {adminUser.name}</div>
-                <div style={{ fontSize: '0.7rem', color: '#6366F1', fontWeight: 600 }}>All {adminUser.allowedModules?.length || 17} Modules • Full Access</div>
+              <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <UserCheck size={15} color="#FFF" />
               </div>
-              <ArrowRight size={14} style={{ marginLeft: 'auto' }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 800 }}>Admin — {adminUser.name}</div>
+                <div style={{ fontSize: '0.7rem', color: '#6366F1', fontWeight: 600 }}>{adminUser.allowedModules?.length || 17} Modules · Full Access</div>
+              </div>
+              <span style={{ fontSize: '0.7rem', background: '#4F46E5', color: '#FFF', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: 700 }}>Admin</span>
             </button>
           )}
 
           {staffUsers.map((user, i) => {
-            const emojis = ['👔', '📑', '💵', '🔧'];
-            const colors = [
-              { border: '#059669', bg: '#ECFDF5 #D1FAE5', text: '#065F46', sub: '#059669' },
-              { border: '#D97706', bg: '#FFFBEB #FEF3C7', text: '#92400E', sub: '#D97706' },
-              { border: '#0284C7', bg: '#F0F9FF #E0F2FE', text: '#075985', sub: '#0284C7' },
+            const roleColors = [
+              { border: '#059669', bgFrom: '#ECFDF5', bgTo: '#D1FAE5', text: '#065F46', sub: '#059669', badge: '#059669' },
+              { border: '#D97706', bgFrom: '#FFFBEB', bgTo: '#FEF3C7', text: '#92400E', sub: '#D97706', badge: '#D97706' },
+              { border: '#0284C7', bgFrom: '#F0F9FF', bgTo: '#E0F2FE', text: '#075985', sub: '#0284C7', badge: '#0284C7' },
             ];
-            const c = colors[i % 3];
+            const c = roleColors[i % 3];
+            const roleShort = user.role?.split(' ').map(w => w[0]).join('') || 'ST';
             return (
               <button
                 key={user.id}
@@ -303,18 +305,20 @@ export default function LoginPage({
                 style={{
                   width: '100%', padding: '0.65rem 1rem',
                   borderRadius: '10px', border: `1.5px solid ${c.border}`,
-                  background: `linear-gradient(135deg, ${c.bg})`,
+                  background: `linear-gradient(135deg, ${c.bgFrom}, ${c.bgTo})`,
                   color: c.text, fontSize: '0.82rem', fontWeight: 700,
                   cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.6rem',
                   transition: 'all 0.2s ease', textAlign: 'left'
                 }}
               >
-                <span style={{ fontSize: '1.1rem' }}>{emojis[i + 1]}</span>
-                <div>
-                  <div style={{ fontWeight: 800 }}>{user.name}</div>
-                  <div style={{ fontSize: '0.7rem', color: c.sub, fontWeight: 600 }}>{user.role} • {user.allowedModules?.length || 0} Modules</div>
+                <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: c.badge, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#FFF', fontWeight: 800, fontSize: '0.65rem' }}>
+                  {roleShort}
                 </div>
-                <ArrowRight size={14} style={{ marginLeft: 'auto' }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 800 }}>{user.name}</div>
+                  <div style={{ fontSize: '0.7rem', color: c.sub, fontWeight: 600 }}>{user.role} · {user.allowedModules?.length || 0} Modules</div>
+                </div>
+                <span style={{ fontSize: '0.7rem', background: c.badge, color: '#FFF', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: 700 }}>Login</span>
               </button>
             );
           })}

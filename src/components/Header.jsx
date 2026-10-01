@@ -21,7 +21,8 @@ import {
   BarChart3,
   Calendar,
   Calculator,
-  FolderCheck
+  FolderCheck,
+  ClipboardList
 } from 'lucide-react';
 
 export default function Header({
@@ -41,8 +42,8 @@ export default function Header({
   onLogout
 }) {
   const roles = [
-    { id: 'admin', label: '👑 Admin (Owner)', color: '#4F46E5' },
-    { id: 'employee', label: '👔 Employee / Staff', color: '#059669' }
+    { id: 'admin', label: 'Admin (Owner)', color: '#4F46E5' },
+    { id: 'employee', label: 'Employee / Staff', color: '#059669' }
   ];
 
   const ALL_TABS = [
@@ -58,6 +59,8 @@ export default function Header({
     { id: 'calendar', label: 'Due Calendar', icon: Calendar },
     { id: 'byajCalc', label: 'Byaj Calc', icon: Calculator },
     { id: 'docsVault', label: 'KYC Vault', icon: FolderCheck },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'reports', label: 'Reports', icon: ClipboardList },
     { id: 'staff', label: 'Staff & Team', icon: UserCheck },
     { id: 'products', label: 'Products', icon: CreditCard },
     { id: 'userManagement', label: 'User Access', icon: ShieldCheck },

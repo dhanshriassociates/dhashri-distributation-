@@ -34,7 +34,9 @@ import {
   BarChart3,
   Calendar,
   Calculator,
-  FolderCheck
+  FolderCheck,
+  Bell,
+  ClipboardList
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -52,6 +54,8 @@ export const AVAILABLE_MODULES = [
   { id: 'overdue', label: 'Overdue Collections & NPA', desc: 'Aging buckets, call notes & recovery promises to pay', icon: AlertTriangle },
   { id: 'byajCalc', label: 'Byaj & EMI Calculator', desc: 'Daily 100-day scheme, monthly flat byaj & reducing EMI quotation', icon: Calculator },
   { id: 'docsVault', label: 'KYC & Legal Document Vault', desc: 'Aadhaar cards, PAN verification, signed promissory notes', icon: FolderCheck },
+  { id: 'notifications', label: 'Notifications & Alerts', desc: 'Overdue EMI alerts, KYC pending reminders, upcoming due notifications', icon: Bell },
+  { id: 'reports', label: 'Reports & Statements', desc: 'Monthly collection reports, portfolio summary, overdue recovery aging report', icon: ClipboardList },
   { id: 'products', label: 'Finance Products', desc: 'Daily/Monthly byaj rules & interest rate configurations', icon: CreditCard },
   { id: 'userManagement', label: 'Admin Panel & Access', desc: 'User management, module permissions and access control', icon: ShieldCheck },
   { id: 'rbac', label: 'RBAC Matrix', desc: 'Static security policies & role matrix overview', icon: Sliders },

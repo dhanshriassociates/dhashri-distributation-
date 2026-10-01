@@ -20,6 +20,8 @@ import AnalyticsView from './components/AnalyticsView';
 import CalendarView from './components/CalendarView';
 import DocsView from './components/DocsView';
 import ByajCalculatorView from './components/ByajCalculatorView';
+import NotificationsView from './components/NotificationsView';
+import ReportsView from './components/ReportsView';
 
 import { 
   INITIAL_ROLES, 
@@ -884,6 +886,26 @@ export default function App() {
         {activeView === 'byajCalc' && (
           <ByajCalculatorView
             onOpenDisburseLoan={() => setIsDisburseLoanOpen(true)}
+          />
+        )}
+
+        {activeView === 'notifications' && (
+          <NotificationsView
+            financeAccounts={financeAccounts}
+            customers={customers}
+            payments={payments}
+            applications={applications}
+            onNavigateTo={setActiveView}
+          />
+        )}
+
+        {activeView === 'reports' && (
+          <ReportsView
+            financeAccounts={financeAccounts}
+            payments={payments}
+            customers={customers}
+            staffMembers={staffMembers}
+            overdueFollowups={overdueFollowups}
           />
         )}
 
