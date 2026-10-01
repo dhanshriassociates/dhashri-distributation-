@@ -5,7 +5,10 @@ import { formatINR } from '../utils/financeCalc';
 export default function NewLoanModal({ customers, teamMembers, activeRole, onClose, onSaveLoan }) {
   const [customerName, setCustomerName] = useState(customers[0]?.name || 'Rajesh Kumar');
   const [principalAmount, setPrincipalAmount] = useState(100000);
-  const [byajType, setByajType] = useState('Monthly % Byaj');
+  const [byajType, setByajType] = useState('Fix Total Wapsi');
+  const [totalReturnTarget, setTotalReturnTarget] = useState(100000);
+  const [fixFrequency, setFixFrequency] = useState('daily');
+  const [fixKistAmount, setFixKistAmount] = useState(1000);
   const [monthlyRatePct, setMonthlyRatePct] = useState(2.0);
   const [dailyRateRupees, setDailyRateRupees] = useState(100);
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
@@ -21,9 +24,13 @@ export default function NewLoanModal({ customers, teamMembers, activeRole, onClo
     const matchedCustomer = customers.find(c => c.name === customerName) || customers[0];
     const matchedAgent = teamMembers.find(a => a.name === agentName) || teamMembers[0];
 
-    // Calculate next due date (1 month from start date)
+    // Calculate next due date (1 day or 1 month from start date)
     const nextDue = new Date(startDate);
-    nextDue.setMonth(nextDue.getMonth() + 1);
+    if (byajType === 'Fix Total Wapsi' && fixFrequency === 'daily') {
+      nextDue.setDate(nextDue.getDate() + 1);
+    } else {
+      nextDue.setMonth(nextDue.getMonth() + 1);
+    }
 
     // If agent submits, status is 'pending_approval' (or active if admin)
     const status = activeRole === 'admin' ? 'active' : 'pending_approval';
@@ -36,6 +43,9 @@ export default function NewLoanModal({ customers, teamMembers, activeRole, onClo
       agentName: matchedAgent.name,
       principalAmount: parseFloat(principalAmount),
       byajType,
+      totalReturnTarget: byajType === 'Fix Total Wapsi' ? parseFloat(totalReturnTarget) : null,
+      installmentFrequency: byajType === 'Fix Total Wapsi' ? fixFrequency : 'monthly',
+      installmentAmount: byajType === 'Fix Total Wapsi' ? parseFloat(fixKistAmount) : null,
       monthlyRatePct: parseFloat(monthlyRatePct),
       dailyRateRupees: parseFloat(dailyRateRupees),
       startDate,
@@ -107,9 +117,10 @@ export default function NewLoanModal({ customers, teamMembers, activeRole, onClo
 
             <div>
               <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                Interest Mode
+                Interest Mode (लोन स्कीम)
               </label>
-              <select value={byajType} onChange={(e) => setByajType(e.target.value)} className="form-select">
+              <select value={byajType} onChange={(e) => setByajType(e.target.value)} className="form-select" style={{ fontWeight: 700 }}>
+                <option value="Fix Total Wapsi">🌟 फिक्स कुल वापसी (₹85k दिए ➔ ₹1L लेने)</option>
                 <option value="Monthly % Byaj">Monthly % Interest Rate</option>
                 <option value="Daily Roj Byaj">Daily Fixed Interest (₹/day)</option>
               </select>
@@ -117,55 +128,97 @@ export default function NewLoanModal({ customers, teamMembers, activeRole, onClo
 
           </div>
 
-          {/* Rate & Start Date Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1.2rem' }}>
-            
-            {byajType === 'Monthly % Byaj' ? (
-              <div>
-                <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                  Monthly Interest Rate (%)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={monthlyRatePct}
-                  onChange={(e) => setMonthlyRatePct(e.target.value)}
-                  className="form-input"
-                />
-                <span style={{ fontSize: '0.72rem', color: '#10B981' }}>
-                  Yield: {formatINR((principalAmount * monthlyRatePct) / 100)} / month
-                </span>
+          {/* Rate & Details Grid */}
+          {byajType === 'Fix Total Wapsi' ? (
+            <div style={{ background: '#F0FDF4', padding: '0.9rem', borderRadius: '8px', border: '1px solid #A7F3D0', marginBottom: '1.2rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.8rem', marginBottom: '0.5rem' }}>
+                <div>
+                  <label style={{ fontSize: '0.74rem', color: '#065F46', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>
+                    कुल वापसी लक्ष्य (₹)
+                  </label>
+                  <input
+                    type="number"
+                    value={totalReturnTarget}
+                    onChange={(e) => setTotalReturnTarget(e.target.value)}
+                    className="form-input"
+                    style={{ fontWeight: 800, color: '#059669' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.74rem', color: '#065F46', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>
+                    किस्त समय
+                  </label>
+                  <select value={fixFrequency} onChange={(e) => setFixFrequency(e.target.value)} className="form-select" style={{ fontSize: '0.82rem' }}>
+                    <option value="daily">दैनिक (Daily)</option>
+                    <option value="weekly">साप्ताहिक (Weekly)</option>
+                    <option value="monthly">मासिक (Monthly)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.74rem', color: '#065F46', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>
+                    प्रति किस्त राशि (₹)
+                  </label>
+                  <input
+                    type="number"
+                    value={fixKistAmount}
+                    onChange={(e) => setFixKistAmount(e.target.value)}
+                    className="form-input"
+                    style={{ fontWeight: 800, color: '#4F46E5' }}
+                  />
+                </div>
               </div>
-            ) : (
-              <div>
-                <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                  Daily Interest Rate (₹ / Day)
-                </label>
-                <input
-                  type="number"
-                  value={dailyRateRupees}
-                  onChange={(e) => setDailyRateRupees(e.target.value)}
-                  className="form-input"
-                />
-                <span style={{ fontSize: '0.72rem', color: '#10B981' }}>
-                  Yield: {formatINR(dailyRateRupees * 30)} / month
-                </span>
+              <div style={{ fontSize: '0.72rem', color: '#047857', fontWeight: 600 }}>
+                💡 मुनाफ़ा: {formatINR(Math.max(0, totalReturnTarget - principalAmount))} | कुल {Math.ceil(totalReturnTarget / (fixKistAmount || 1))} किस्तें
               </div>
-            )}
-
-            <div>
-              <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                Disbursal Date
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="form-input"
-              />
             </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1.2rem' }}>
+              {byajType === 'Monthly % Byaj' ? (
+                <div>
+                  <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                    Monthly Interest Rate (%)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={monthlyRatePct}
+                    onChange={(e) => setMonthlyRatePct(e.target.value)}
+                    className="form-input"
+                  />
+                  <span style={{ fontSize: '0.72rem', color: '#10B981' }}>
+                    Yield: {formatINR((principalAmount * monthlyRatePct) / 100)} / month
+                  </span>
+                </div>
+              ) : (
+                <div>
+                  <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                    Daily Interest Rate (₹ / Day)
+                  </label>
+                  <input
+                    type="number"
+                    value={dailyRateRupees}
+                    onChange={(e) => setDailyRateRupees(e.target.value)}
+                    className="form-input"
+                  />
+                  <span style={{ fontSize: '0.72rem', color: '#10B981' }}>
+                    Yield: {formatINR(dailyRateRupees * 30)} / month
+                  </span>
+                </div>
+              )}
 
-          </div>
+              <div>
+                <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                  Disbursal Date
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Collateral Asset Vault Section */}
           <div style={{

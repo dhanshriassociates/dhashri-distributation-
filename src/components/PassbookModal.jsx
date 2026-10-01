@@ -19,7 +19,16 @@ export default function PassbookModal({
   const totalInterestPaid = accPayments.reduce((acc, c) => acc + (c.allocatedInterest || 0), 0);
 
   const financedAmount = activeAcc.financedAmount || activeAcc.principalAmount || 0;
-  const remainingPrincipal = Math.max(0, financedAmount - totalPrincipalPaid);
+  const isFixTotal = activeAcc.schemeType === 'fix_total' || activeAcc.productName?.includes('Fix') || activeAcc.totalRepaymentTarget;
+  const totalTargetRepayment = activeAcc.totalRepaymentTarget || (activeAcc.emiSchedule?.reduce((sum, s) => sum + s.emiAmount, 0)) || financedAmount;
+  
+  const remainingBalance = isFixTotal 
+    ? Math.max(0, totalTargetRepayment - totalPaid)
+    : Math.max(0, financedAmount - totalPrincipalPaid);
+
+  const totalInstallmentsCount = activeAcc.emiSchedule?.length || activeAcc.totalInstallments || 1;
+  const paidInstallmentsCount = activeAcc.emiSchedule?.filter(s => s.status === 'paid').length || 0;
+  const progressPercent = totalTargetRepayment > 0 ? Math.min(100, Math.round((totalPaid / totalTargetRepayment) * 100)) : 0;
 
   const handlePrint = () => {
     window.print();
@@ -30,7 +39,7 @@ export default function PassbookModal({
       <div 
         className="modal-content" 
         onClick={(e) => e.stopPropagation()} 
-        style={{ maxWidth: '820px', maxHeight: '90vh', overflowY: 'auto' }}
+        style={{ maxWidth: '840px', maxHeight: '90vh', overflowY: 'auto' }}
       >
         
         {/* Header */}
@@ -56,11 +65,16 @@ export default function PassbookModal({
               <Receipt size={20} />
             </div>
             <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 Borrower Passbook & Repayment Ledger
+                {isFixTotal && (
+                  <span style={{ fontSize: '0.72rem', background: '#ECFDF5', color: '#047857', border: '1px solid #A7F3D0', padding: '0.15rem 0.5rem', borderRadius: '12px' }}>
+                    फिक्स कुल वापसी (Fix Return)
+                  </span>
+                )}
               </h3>
               <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                Account No: <strong style={{ color: '#4F46E5' }}>{activeAcc.id}</strong>
+                Account No: <strong style={{ color: '#4F46E5' }}>{activeAcc.id}</strong> • Officer: {activeAcc.assignedOfficer || 'General Staff'}
               </p>
             </div>
           </div>
@@ -74,6 +88,32 @@ export default function PassbookModal({
             </button>
           </div>
         </div>
+
+        {/* Fix Total Repayment Progress Strip */}
+        {isFixTotal && (
+          <div style={{
+            background: 'linear-gradient(135deg, #064E3B 0%, #065F46 100%)',
+            color: '#ECFDF5',
+            padding: '1rem 1.2rem',
+            borderRadius: 'var(--radius-md)',
+            marginBottom: '1.2rem',
+            boxShadow: '0 4px 12px rgba(6, 78, 59, 0.2)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 700 }}>
+                🎯 कुल वापसी लक्ष्य: <strong>{formatCurrency(totalTargetRepayment)}</strong> (दिए: {formatCurrency(financedAmount)} | शुद्ध मुनाफा: +{formatCurrency(totalTargetRepayment - financedAmount)})
+              </span>
+              <span style={{ fontSize: '0.78rem', background: '#059669', padding: '0.2rem 0.6rem', borderRadius: '8px', fontWeight: 800 }}>
+                {paidInstallmentsCount} / {totalInstallmentsCount} किस्तें जमा ({progressPercent}%)
+              </span>
+            </div>
+
+            {/* Progress Bar */}
+            <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.2)', borderRadius: '4px', overflow: 'hidden' }}>
+              <div style={{ width: `${progressPercent}%`, height: '100%', background: '#34D399', borderRadius: '4px', transition: 'width 0.4s ease' }} />
+            </div>
+          </div>
+        )}
 
         {/* Borrower & Loan Details Card */}
         <div style={{
@@ -105,18 +145,22 @@ export default function PassbookModal({
           </div>
 
           <div>
-            <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 600 }}>Principal Disbursed</span>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 600 }}>
+              {isFixTotal ? 'दिए गए पैसे (Principal)' : 'Principal Disbursed'}
+            </span>
             <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#059669' }}>{formatCurrency(financedAmount)}</h4>
             <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
               Disbursed: {activeAcc.startDate || 'Recent'}
             </span>
-            <div style={{ fontSize: '0.74rem', color: 'var(--text-dim)' }}>
-              Scheme: {activeAcc.productName}
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '200px' }}>
+              {activeAcc.productName}
             </div>
           </div>
 
           <div>
-            <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 600 }}>Collections Received</span>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 600 }}>
+              जमा राशि (Collections Received)
+            </span>
             <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#4F46E5' }}>{formatCurrency(totalPaid)}</h4>
             <div style={{ fontSize: '0.72rem', color: '#059669' }}>
               Principal Repaid: {formatCurrency(totalPrincipalPaid)}
@@ -127,9 +171,11 @@ export default function PassbookModal({
           </div>
 
           <div>
-            <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 600 }}>Outstanding Balance</span>
-            <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: remainingPrincipal > 0 ? '#DC2626' : '#059669' }}>
-              {formatCurrency(remainingPrincipal)}
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 600 }}>
+              {isFixTotal ? 'बाकी कुल रकम (Remaining Total)' : 'Outstanding Balance'}
+            </span>
+            <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: remainingBalance > 0 ? '#DC2626' : '#059669' }}>
+              {formatCurrency(remainingBalance)}
             </h4>
             <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
               Status: <span className={`badge-status ${activeAcc.status.toLowerCase()}`}>{activeAcc.status}</span>

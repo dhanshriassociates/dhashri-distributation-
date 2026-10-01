@@ -52,6 +52,19 @@ export const INITIAL_FINANCE_PRODUCTS = [
     calcMode: 'flat',
     processingFeePct: 2.0,
     requiredDocuments: ['Aadhaar Card', 'PAN Card', 'Business Trade License', 'Post Dated Cheques']
+  },
+  {
+    id: 'prod-104',
+    name: 'Fix Total Wapsi Market Loan (Daily/Weekly Kist)',
+    code: 'FTW-04',
+    minAmount: 10000,
+    maxAmount: 1000000,
+    annualRatePct: 18.0,
+    minTenureMonths: 1,
+    maxTenureMonths: 12,
+    calcMode: 'fix_total',
+    processingFeePct: 0,
+    requiredDocuments: ['Aadhaar Card', 'PAN Card', 'Customer Photo']
   }
 ];
 

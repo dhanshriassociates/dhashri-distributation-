@@ -30,6 +30,38 @@ export function calculateDailyByaj(principal, dailyRateRupees, days = 30) {
   };
 }
 
+// Calculate Fix Total Return Repayment Scheme (e.g. ₹85,000 Disbursed -> ₹1,00,000 Fix Total Return)
+export function calculateFixRepayment(principal, totalRepayment, frequency = 'daily', installmentAmount = 0, totalInstallments = 0) {
+  const p = parseFloat(principal) || 0;
+  const target = Math.max(p, parseFloat(totalRepayment) || p);
+  const totalProfit = Math.max(0, target - p);
+  const profitPercentage = p > 0 ? ((totalProfit / p) * 100).toFixed(2) : 0;
+
+  let emi = 0;
+  let count = 1;
+
+  if (installmentAmount && parseFloat(installmentAmount) > 0) {
+    emi = parseFloat(installmentAmount);
+    count = Math.max(1, Math.ceil(target / emi));
+  } else if (totalInstallments && parseInt(totalInstallments) > 0) {
+    count = parseInt(totalInstallments);
+    emi = Math.round(target / count);
+  } else {
+    count = frequency === 'daily' ? 100 : frequency === 'weekly' ? 20 : 12;
+    emi = Math.round(target / count);
+  }
+
+  return {
+    principal: p,
+    totalRepayment: target,
+    totalProfit,
+    profitPercentage,
+    frequency,
+    installmentAmount: emi,
+    totalInstallments: count
+  };
+}
+
 // Overdue status calculator
 export function getLoanStatus(dueDateStr, currentStatus) {
   if (currentStatus === 'closed' || currentStatus === 'pending_approval') {
@@ -47,3 +79,4 @@ export function getLoanStatus(dueDateStr, currentStatus) {
   }
   return { isOverdue: false, daysOverdue: 0 };
 }
+

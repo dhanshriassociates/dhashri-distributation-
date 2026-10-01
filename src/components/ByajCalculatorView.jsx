@@ -11,16 +11,29 @@ import {
   ArrowRight,
   TrendingUp,
   PieChart,
-  Calendar
+  Calendar,
+  Sparkles,
+  Sun,
+  Repeat
 } from 'lucide-react';
-import { formatINR } from '../utils/financeCalc';
+import { formatINR, calculateFixRepayment } from '../utils/financeCalc';
+import { formatCurrency } from '../utils/financeEngine';
 
 export default function ByajCalculatorView({ onOpenDisburseLoan }) {
-  const [calcType, setCalcType] = useState('monthly_flat'); // 'monthly_flat', 'daily_scheme', 'reducing_emi'
-  const [principal, setPrincipal] = useState(50000);
+  const [calcType, setCalcType] = useState('fix_total'); // 'fix_total', 'monthly_flat', 'daily_scheme', 'reducing_emi'
+  
+  // Fix Total Specific State (e.g. ₹85,000 given -> ₹1,00,000 return)
+  const [principal, setPrincipal] = useState(85000);
+  const [fixTargetReturn, setFixTargetReturn] = useState(100000);
+  const [fixFrequency, setFixFrequency] = useState('daily'); // 'daily', 'weekly', 'monthly'
+  const [fixKistMode, setFixKistMode] = useState('by_amount'); // 'by_amount', 'by_count'
+  const [fixInstallmentAmount, setFixInstallmentAmount] = useState(1000);
+  const [fixTotalCount, setFixTotalCount] = useState(100);
+
+  // Standard Interest Schemes State
   const [ratePct, setRatePct] = useState(2.0); // 2% per month
   const [tenure, setTenure] = useState(12); // 12 months or 100 days
-  const [processingFeePct, setProcessingFeePct] = useState(2.0);
+  const [processingFeePct, setProcessingFeePct] = useState(0);
 
   // Calculations
   const p = Math.max(0, Number(principal) || 0);
@@ -31,23 +44,41 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
   let totalInterest = 0;
   let totalPayable = 0;
   let emiAmount = 0;
+  let totalInstallmentCount = 1;
   let installmentFrequency = 'Monthly';
 
-  if (calcType === 'monthly_flat') {
+  if (calcType === 'fix_total') {
+    const target = Math.max(p, Number(fixTargetReturn) || p);
+    totalPayable = target;
+    totalInterest = Math.max(0, target - p);
+
+    if (fixKistMode === 'by_amount') {
+      const singleKist = Math.max(1, Number(fixInstallmentAmount) || 1000);
+      emiAmount = singleKist;
+      totalInstallmentCount = Math.ceil(target / singleKist);
+    } else {
+      const count = Math.max(1, Number(fixTotalCount) || 100);
+      totalInstallmentCount = count;
+      emiAmount = Math.round(target / count);
+    }
+
+    installmentFrequency = fixFrequency === 'daily' ? 'Daily (दैनिक / रोज़)' : fixFrequency === 'weekly' ? 'Weekly (साप्ताहिक / हफ़्ता)' : 'Monthly (मासिक / माह)';
+  } else if (calcType === 'monthly_flat') {
     // Flat monthly interest: Interest = P * (rate/100) * months
     totalInterest = Math.round(p * (r / 100) * t);
     totalPayable = p + totalInterest;
     emiAmount = Math.round(totalPayable / t);
+    totalInstallmentCount = t;
     installmentFrequency = 'Monthly';
   } else if (calcType === 'daily_scheme') {
     // e.g. 100 days daily scheme: rate is total flat interest % for the tenure
     totalInterest = Math.round(p * (r / 100));
     totalPayable = p + totalInterest;
     emiAmount = Math.round(totalPayable / t);
+    totalInstallmentCount = t;
     installmentFrequency = 'Daily';
   } else if (calcType === 'reducing_emi') {
     // Annual rate reducing EMI
-    const annualRate = r * 12; // converting monthly to annual or using r as monthly
     const monthlyRate = (r / 100);
     if (monthlyRate === 0) {
       emiAmount = Math.round(p / t);
@@ -59,6 +90,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
       totalPayable = Math.round(emiAmount * t);
       totalInterest = totalPayable - p;
     }
+    totalInstallmentCount = t;
     installmentFrequency = 'Monthly';
   }
 
@@ -70,7 +102,14 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
   };
 
   const handleWhatsAppShare = () => {
-    const text = `*DHANSHRI ASSOCIATES - LOAN ESTIMATE*\nPrincipal: ₹${p.toLocaleString('en-IN')}\nType: ${calcType === 'daily_scheme' ? 'Daily Collection Scheme' : calcType === 'monthly_flat' ? 'Monthly Flat Byaj' : 'Reducing EMI'}\nDuration: ${t} ${installmentFrequency === 'Daily' ? 'Days' : 'Months'}\nInterest Rate: ${r}% / month\n${installmentFrequency} Installment: ₹${emiAmount.toLocaleString('en-IN')}\nTotal Interest: ₹${totalInterest.toLocaleString('en-IN')}\nNet In Hand: ₹${netInHand.toLocaleString('en-IN')}\nTotal Repayment: ₹${totalPayable.toLocaleString('en-IN')}`;
+    let text = '';
+    if (calcType === 'fix_total') {
+      const freqHindi = fixFrequency === 'daily' ? 'रोज़ाना (Daily)' : fixFrequency === 'weekly' ? 'साप्ताहिक (Weekly)' : 'मासिक (Monthly)';
+      const unitHindi = fixFrequency === 'daily' ? 'दिन' : fixFrequency === 'weekly' ? 'हफ़्ते' : 'माह';
+      text = `*धनश्री एसोसिएट्स - लोन हिसाब पर्ची*\n━━━━━━━━━━━━━━━━━━━━\n👤 *सीधा व सरल हिसाब*\n💰 दिए गए पैसे: ₹${p.toLocaleString('en-IN')}\n🎯 कुल वापस देने हैं: ₹${totalPayable.toLocaleString('en-IN')}\n📈 कुल मुनाफा / ब्याज: ₹${totalInterest.toLocaleString('en-IN')}\n\n🗓️ किस्त प्रकार: ${freqHindi}\n💵 किस्त राशि: ₹${emiAmount.toLocaleString('en-IN')} / ${unitHindi}\n🔢 कुल किस्तें (अवधि): ${totalInstallmentCount} ${unitHindi}\n━━━━━━━━━━━━━━━━━━━━\n✅ *कुल हिसाब: ₹${emiAmount.toLocaleString('en-IN')} × ${totalInstallmentCount} = ₹${totalPayable.toLocaleString('en-IN')}*\nधन्यवाद - धनश्री एसोसिएट्स`;
+    } else {
+      text = `*DHANSHRI ASSOCIATES - LOAN ESTIMATE*\nPrincipal: ₹${p.toLocaleString('en-IN')}\nType: ${calcType === 'daily_scheme' ? 'Daily Collection Scheme' : calcType === 'monthly_flat' ? 'Monthly Flat Byaj' : 'Reducing EMI'}\nDuration: ${t} ${installmentFrequency === 'Daily' ? 'Days' : 'Months'}\nInterest Rate: ${r}% / month\n${installmentFrequency} Installment: ₹${emiAmount.toLocaleString('en-IN')}\nTotal Interest: ₹${totalInterest.toLocaleString('en-IN')}\nNet In Hand: ₹${netInHand.toLocaleString('en-IN')}\nTotal Repayment: ₹${totalPayable.toLocaleString('en-IN')}`;
+    }
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -147,15 +186,32 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
           boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
         }}>
           <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', marginBottom: '1.2rem' }}>
-            1. Select Lending Scheme & Terms
+            1. Select Lending Scheme & Terms (लोन स्कीम चुनें)
           </h3>
 
           {/* Scheme Switcher Tabs */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1.4rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem', marginBottom: '1.4rem' }}>
+            <button
+              onClick={() => { setCalcType('fix_total'); setPrincipal(85000); setFixTargetReturn(100000); }}
+              style={{
+                padding: '0.65rem 0.5rem',
+                borderRadius: '8px',
+                border: calcType === 'fix_total' ? '2px solid #059669' : '1px solid #E2E8F0',
+                background: calcType === 'fix_total' ? '#ECFDF5' : '#FFF',
+                color: calcType === 'fix_total' ? '#059669' : '#475569',
+                fontWeight: 800,
+                fontSize: '0.78rem',
+                cursor: 'pointer',
+                textAlign: 'center'
+              }}
+            >
+              🌟 फिक्स कुल वापसी (₹85k दिए ➔ ₹1L)
+            </button>
+
             <button
               onClick={() => { setCalcType('monthly_flat'); setRatePct(2.0); setTenure(12); }}
               style={{
-                padding: '0.6rem 0.5rem',
+                padding: '0.65rem 0.5rem',
                 borderRadius: '8px',
                 border: calcType === 'monthly_flat' ? '2px solid #4F46E5' : '1px solid #E2E8F0',
                 background: calcType === 'monthly_flat' ? '#EEF2FF' : '#FFF',
@@ -166,17 +222,17 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                 textAlign: 'center'
               }}
             >
-              Monthly Flat Interest (e.g. 2%-3%/mo)
+              Monthly Flat Byaj (% / mo)
             </button>
 
             <button
               onClick={() => { setCalcType('daily_scheme'); setRatePct(20.0); setTenure(100); }}
               style={{
-                padding: '0.6rem 0.5rem',
+                padding: '0.65rem 0.5rem',
                 borderRadius: '8px',
-                border: calcType === 'daily_scheme' ? '2px solid #059669' : '1px solid #E2E8F0',
-                background: calcType === 'daily_scheme' ? '#ECFDF5' : '#FFF',
-                color: calcType === 'daily_scheme' ? '#059669' : '#475569',
+                border: calcType === 'daily_scheme' ? '2px solid #D97706' : '1px solid #E2E8F0',
+                background: calcType === 'daily_scheme' ? '#FFFBEB' : '#FFF',
+                color: calcType === 'daily_scheme' ? '#D97706' : '#475569',
                 fontWeight: 700,
                 fontSize: '0.78rem',
                 cursor: 'pointer',
@@ -189,7 +245,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
             <button
               onClick={() => { setCalcType('reducing_emi'); setRatePct(1.5); setTenure(12); }}
               style={{
-                padding: '0.6rem 0.5rem',
+                padding: '0.65rem 0.5rem',
                 borderRadius: '8px',
                 border: calcType === 'reducing_emi' ? '2px solid #2563EB' : '1px solid #E2E8F0',
                 background: calcType === 'reducing_emi' ? '#EFF6FF' : '#FFF',
@@ -200,7 +256,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                 textAlign: 'center'
               }}
             >
-              Reducing Balance EMI
+              Reducing Bank EMI
             </button>
           </div>
 
@@ -208,10 +264,10 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
             {/* Principal */}
             <div>
               <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.4rem' }}>
-                Principal Amount (₹)
+                {calcType === 'fix_total' ? 'दिए गए रुपये (Principal Given)' : 'Principal Amount (₹)'}
               </label>
               <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#64748B', fontWeight: 800 }}>₹</span>
+                <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#059669', fontWeight: 800, fontSize: '1.1rem' }}>₹</span>
                 <input
                   type="number"
                   value={principal}
@@ -220,11 +276,15 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                 />
               </div>
               <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.4rem' }}>
-                {[10000, 25000, 50000, 100000, 200000].map(amt => (
+                {[10000, 25000, 50000, 85000, 100000, 200000].map(amt => (
                   <button
                     key={amt}
                     type="button"
-                    onClick={() => setPrincipal(amt)}
+                    onClick={() => {
+                      setPrincipal(amt);
+                      if (calcType === 'fix_total' && amt === 85000) setFixTargetReturn(100000);
+                      else if (calcType === 'fix_total' && amt === 50000) setFixTargetReturn(60000);
+                    }}
                     style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem', background: '#F1F5F9', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, color: '#475569' }}
                   >
                     ₹{(amt / 1000)}k
@@ -233,59 +293,185 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
               </div>
             </div>
 
-            {/* Interest Rate & Duration */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.4rem' }}>
-                  {calcType === 'daily_scheme' ? 'Total Flat Interest (%)' : 'Monthly Rate (% / Month)'}
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={ratePct}
-                    onChange={(e) => setRatePct(e.target.value)}
-                    style={{ width: '100%', padding: '0.65rem 1.8rem 0.65rem 0.8rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '1rem', fontWeight: 700, color: '#0F172A' }}
-                  />
-                  <span style={{ position: 'absolute', right: '12px', top: '12px', color: '#64748B', fontWeight: 800, fontSize: '0.8rem' }}>%</span>
+            {/* IF FIX TOTAL SCHEME */}
+            {calcType === 'fix_total' && (
+              <div style={{ background: '#F0FDF4', padding: '1rem', borderRadius: '10px', border: '1px solid #A7F3D0', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* Total Target */}
+                <div>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#065F46', display: 'block', marginBottom: '0.35rem' }}>
+                    कुल वापस कितने लेने हैं? (Total Return Target) *
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#059669', fontWeight: 800, fontSize: '1.1rem' }}>₹</span>
+                    <input
+                      type="number"
+                      value={fixTargetReturn}
+                      onChange={(e) => setFixTargetReturn(e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem 0.8rem 0.65rem 2rem', borderRadius: '8px', border: '2px solid #059669', fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}
+                    />
+                  </div>
                 </div>
-                <span style={{ fontSize: '0.68rem', color: '#64748B' }}>
-                  {calcType !== 'daily_scheme' && `${(ratePct * 12).toFixed(1)}% annual equivalent`}
-                </span>
-              </div>
 
-              <div>
-                <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.4rem' }}>
-                  Duration ({calcType === 'daily_scheme' ? 'Days' : 'Months'})
-                </label>
-                <input
-                  type="number"
-                  value={tenure}
-                  onChange={(e) => setTenure(e.target.value)}
-                  style={{ width: '100%', padding: '0.65rem 0.8rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '1rem', fontWeight: 700, color: '#0F172A' }}
-                />
-              </div>
-            </div>
+                {/* Frequency */}
+                <div>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#065F46', display: 'block', marginBottom: '0.35rem' }}>
+                    किस्त का समय (Frequency)
+                  </label>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    {[
+                      { id: 'daily', label: '☀️ दैनिक (Daily / रोज़)' },
+                      { id: 'weekly', label: '📅 साप्ताहिक (Weekly / हफ़्ता)' },
+                      { id: 'monthly', label: '📆 मासिक (Monthly / माह)' }
+                    ].map(f => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => setFixFrequency(f.id)}
+                        style={{
+                          flex: 1,
+                          padding: '0.5rem 0.4rem',
+                          borderRadius: '6px',
+                          border: fixFrequency === f.id ? '2px solid #059669' : '1px solid #CBD5E1',
+                          background: fixFrequency === f.id ? '#059669' : '#FFF',
+                          color: fixFrequency === f.id ? '#FFF' : '#334155',
+                          fontWeight: 700,
+                          fontSize: '0.74rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Processing Fee */}
-            <div>
-              <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.4rem' }}>
-                Documentation & Processing Fee Deduction (%)
-              </label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={processingFeePct}
-                  onChange={(e) => setProcessingFeePct(e.target.value)}
-                  style={{ width: '100%', padding: '0.65rem 1.8rem 0.65rem 0.8rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.95rem', fontWeight: 700 }}
-                />
-                <span style={{ position: 'absolute', right: '12px', top: '12px', color: '#64748B', fontWeight: 800, fontSize: '0.8rem' }}>%</span>
+                {/* Mode Switch & Input */}
+                <div>
+                  <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.5rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => setFixKistMode('by_amount')}
+                      style={{
+                        flex: 1,
+                        padding: '0.4rem 0.5rem',
+                        borderRadius: '6px',
+                        border: fixKistMode === 'by_amount' ? '2px solid #4F46E5' : '1px solid #CBD5E1',
+                        background: fixKistMode === 'by_amount' ? '#EEF2FF' : '#FFF',
+                        color: fixKistMode === 'by_amount' ? '#4338CA' : '#334155',
+                        fontWeight: 700,
+                        fontSize: '0.74rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ₹ किस्त राशि तय करें
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFixKistMode('by_count')}
+                      style={{
+                        flex: 1,
+                        padding: '0.4rem 0.5rem',
+                        borderRadius: '6px',
+                        border: fixKistMode === 'by_count' ? '2px solid #4F46E5' : '1px solid #CBD5E1',
+                        background: fixKistMode === 'by_count' ? '#EEF2FF' : '#FFF',
+                        color: fixKistMode === 'by_count' ? '#4338CA' : '#334155',
+                        fontWeight: 700,
+                        fontSize: '0.74rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      🔢 कुल दिन / किस्तें
+                    </button>
+                  </div>
+
+                  {fixKistMode === 'by_amount' ? (
+                    <div>
+                      <input
+                        type="number"
+                        value={fixInstallmentAmount}
+                        onChange={(e) => setFixInstallmentAmount(e.target.value)}
+                        placeholder="e.g. 1000"
+                        style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '1rem', fontWeight: 800, color: '#4F46E5' }}
+                      />
+                      <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700, marginTop: '0.2rem', display: 'block' }}>
+                        ➔ {totalInstallmentCount} {fixFrequency === 'daily' ? 'दिन (Days)' : fixFrequency === 'weekly' ? 'हफ़्ते (Weeks)' : 'महीने (Months)'} में पूरा होगा
+                      </span>
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        type="number"
+                        value={fixTotalCount}
+                        onChange={(e) => setFixTotalCount(e.target.value)}
+                        placeholder="e.g. 100"
+                        style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '1rem', fontWeight: 800, color: '#4F46E5' }}
+                      />
+                      <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700, marginTop: '0.2rem', display: 'block' }}>
+                        ➔ हर {fixFrequency === 'daily' ? 'दिन' : fixFrequency === 'weekly' ? 'हफ़्ते' : 'माह'} ₹{emiAmount.toLocaleString('en-IN')} किस्त बनेगी
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-              <span style={{ fontSize: '0.68rem', color: '#64748B' }}>
-                Deducted upfront: {formatINR(processingFee)}
-              </span>
-            </div>
+            )}
+
+            {/* STANDARD INTEREST RATE INPUTS */}
+            {calcType !== 'fix_total' && (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.4rem' }}>
+                      {calcType === 'daily_scheme' ? 'Total Flat Interest (%)' : 'Monthly Rate (% / Month)'}
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={ratePct}
+                        onChange={(e) => setRatePct(e.target.value)}
+                        style={{ width: '100%', padding: '0.65rem 1.8rem 0.65rem 0.8rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '1rem', fontWeight: 700, color: '#0F172A' }}
+                      />
+                      <span style={{ position: 'absolute', right: '12px', top: '12px', color: '#64748B', fontWeight: 800, fontSize: '0.8rem' }}>%</span>
+                    </div>
+                    <span style={{ fontSize: '0.68rem', color: '#64748B' }}>
+                      {calcType !== 'daily_scheme' && `${(ratePct * 12).toFixed(1)}% annual equivalent`}
+                    </span>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.4rem' }}>
+                      Duration ({calcType === 'daily_scheme' ? 'Days' : 'Months'})
+                    </label>
+                    <input
+                      type="number"
+                      value={tenure}
+                      onChange={(e) => setTenure(e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem 0.8rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '1rem', fontWeight: 700, color: '#0F172A' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Processing Fee */}
+                <div>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.4rem' }}>
+                    Documentation & Processing Fee Deduction (%)
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={processingFeePct}
+                      onChange={(e) => setProcessingFeePct(e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem 1.8rem 0.65rem 0.8rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.95rem', fontWeight: 700 }}
+                    />
+                    <span style={{ position: 'absolute', right: '12px', top: '12px', color: '#64748B', fontWeight: 800, fontSize: '0.8rem' }}>%</span>
+                  </div>
+                  <span style={{ fontSize: '0.68rem', color: '#64748B' }}>
+                    Deducted upfront: {formatINR(processingFee)}
+                  </span>
+                </div>
+              </>
+            )}
 
             {onOpenDisburseLoan && (
               <button
@@ -307,7 +493,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                   gap: '0.5rem'
                 }}
               >
-                Disburse This Loan Now <ArrowRight size={16} />
+                Disburse This Loan Now (तुरंत लोन दें) <ArrowRight size={16} />
               </button>
             )}
 
@@ -332,7 +518,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                   Dhanshri Loan Estimate
                 </span>
                 <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFF' }}>
-                  {calcType === 'daily_scheme' ? 'Daily Collection Plan' : calcType === 'monthly_flat' ? 'Monthly Flat Interest Plan' : 'Reducing Balance Plan'}
+                  {calcType === 'fix_total' ? '🌟 Fix Total Wapsi Plan' : calcType === 'daily_scheme' ? 'Daily Collection Plan' : calcType === 'monthly_flat' ? 'Monthly Flat Interest Plan' : 'Reducing Balance Plan'}
                 </h4>
               </div>
               <span style={{ background: 'rgba(16, 185, 129, 0.2)', border: '1px solid #10B981', color: '#34D399', fontSize: '0.72rem', fontWeight: 800, padding: '0.2rem 0.6rem', borderRadius: '12px' }}>
@@ -343,48 +529,50 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
             {/* Big Installment Amount */}
             <div style={{ background: 'rgba(255, 255, 255, 0.05)', borderRadius: '12px', padding: '1.2rem', marginBottom: '1.4rem', border: '1px solid rgba(255,255,255,0.08)' }}>
               <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>
-                {installmentFrequency} Installment Amount (EMI)
+                {installmentFrequency} Installment Amount (किस्त राशि)
               </div>
               <div style={{ fontSize: '2.4rem', fontWeight: 900, color: '#34D399', margin: '0.2rem 0' }}>
                 {formatINR(emiAmount)}
               </div>
               <div style={{ fontSize: '0.74rem', color: '#CBD5E1' }}>
-                for {t} {installmentFrequency === 'Daily' ? 'Days' : 'Months'} = Total Repayment of {formatINR(totalPayable)}
+                for {totalInstallmentCount} {calcType === 'fix_total' ? (fixFrequency === 'daily' ? 'Days (दिन)' : fixFrequency === 'weekly' ? 'Weeks (हफ़्ते)' : 'Months (महीने)') : (installmentFrequency === 'Daily' ? 'Days' : 'Months')} = Total Repayment of {formatINR(totalPayable)}
               </div>
             </div>
 
             {/* Breakdown List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem', fontSize: '0.85rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '0.4rem' }}>
-                <span style={{ color: '#94A3B8' }}>Principal Financed:</span>
+                <span style={{ color: '#94A3B8' }}>दिए गए पैसे (Principal Financed):</span>
                 <span style={{ fontWeight: 800, color: '#FFF' }}>{formatINR(p)}</span>
               </div>
 
+              {processingFee > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '0.4rem' }}>
+                  <span style={{ color: '#94A3B8' }}>Upfront Processing Fee ({pfPct}%):</span>
+                  <span style={{ fontWeight: 700, color: '#F87171' }}>- {formatINR(processingFee)}</span>
+                </div>
+              )}
+
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '0.4rem' }}>
-                <span style={{ color: '#94A3B8' }}>Upfront Processing Fee ({pfPct}%):</span>
-                <span style={{ fontWeight: 700, color: '#F87171' }}>- {formatINR(processingFee)}</span>
+                <span style={{ color: '#94A3B8' }}>शुद्ध मुनाफा / ब्याज (Profit / Interest):</span>
+                <span style={{ fontWeight: 800, color: '#FBBF24' }}>+ {formatINR(totalInterest)} ({p > 0 ? ((totalInterest / p) * 100).toFixed(1) : 0}%)</span>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '0.4rem' }}>
-                <span style={{ color: '#94A3B8' }}>Net Payout in Hand (Borrower receives):</span>
-                <span style={{ fontWeight: 800, color: '#38BDF8' }}>{formatINR(netInHand)}</span>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '0.4rem' }}>
-                <span style={{ color: '#94A3B8' }}>Total Interest Earned:</span>
-                <span style={{ fontWeight: 800, color: '#FBBF24' }}>+ {formatINR(totalInterest)}</span>
+                <span style={{ color: '#94A3B8' }}>किस्त का नियम (Installment Rule):</span>
+                <span style={{ fontWeight: 800, color: '#38BDF8' }}>₹{emiAmount.toLocaleString('en-IN')} × {totalInstallmentCount} किस्तें</span>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.3rem' }}>
-                <span style={{ color: '#FFF', fontWeight: 800 }}>Total To Be Collected:</span>
-                <span style={{ fontWeight: 900, fontSize: '1.05rem', color: '#34D399' }}>{formatINR(totalPayable)}</span>
+                <span style={{ color: '#FFF', fontWeight: 800 }}>कुल वापस लेने हैं (Total Repayment):</span>
+                <span style={{ fontWeight: 900, fontSize: '1.15rem', color: '#34D399' }}>{formatINR(totalPayable)}</span>
               </div>
             </div>
           </div>
 
           <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '0.72rem', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>Auto-generated by Dhanshri Calculator</span>
-            <span>Accurate to 2 decimal places</span>
+            <span>Auto-calculated by Dhanshri Associates</span>
+            <span>Easy illiterate-friendly calculation</span>
           </div>
         </div>
 
