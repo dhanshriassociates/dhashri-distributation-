@@ -117,10 +117,10 @@ export default function NewLoanModal({ customers, teamMembers, activeRole, onClo
 
             <div>
               <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                Interest Mode (लोन स्कीम)
+                Interest Mode & Scheme
               </label>
               <select value={byajType} onChange={(e) => setByajType(e.target.value)} className="form-select" style={{ fontWeight: 700 }}>
-                <option value="Fix Total Wapsi">🌟 फिक्स कुल वापसी (₹85k दिए ➔ ₹1L लेने)</option>
+                <option value="Fix Total Wapsi">🌟 Fixed Total Return (e.g. ₹85k Disbursed ➔ ₹100k Target)</option>
                 <option value="Monthly % Byaj">Monthly % Interest Rate</option>
                 <option value="Daily Roj Byaj">Daily Fixed Interest (₹/day)</option>
               </select>
@@ -134,7 +134,7 @@ export default function NewLoanModal({ customers, teamMembers, activeRole, onClo
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.8rem', marginBottom: '0.5rem' }}>
                 <div>
                   <label style={{ fontSize: '0.74rem', color: '#065F46', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>
-                    कुल वापसी लक्ष्य (₹)
+                    Target Repayment (₹)
                   </label>
                   <input
                     type="number"
@@ -146,17 +146,17 @@ export default function NewLoanModal({ customers, teamMembers, activeRole, onClo
                 </div>
                 <div>
                   <label style={{ fontSize: '0.74rem', color: '#065F46', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>
-                    किस्त समय
+                    Frequency
                   </label>
                   <select value={fixFrequency} onChange={(e) => setFixFrequency(e.target.value)} className="form-select" style={{ fontSize: '0.82rem' }}>
-                    <option value="daily">दैनिक (Daily)</option>
-                    <option value="weekly">साप्ताहिक (Weekly)</option>
-                    <option value="monthly">मासिक (Monthly)</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
                   </select>
                 </div>
                 <div>
                   <label style={{ fontSize: '0.74rem', color: '#065F46', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>
-                    प्रति किस्त राशि (₹)
+                    Installment Amount (₹)
                   </label>
                   <input
                     type="number"
@@ -168,7 +168,7 @@ export default function NewLoanModal({ customers, teamMembers, activeRole, onClo
                 </div>
               </div>
               <div style={{ fontSize: '0.72rem', color: '#047857', fontWeight: 600 }}>
-                💡 मुनाफ़ा: {formatINR(Math.max(0, totalReturnTarget - principalAmount))} | कुल {Math.ceil(totalReturnTarget / (fixKistAmount || 1))} किस्तें
+                💡 Expected Profit: {formatINR(Math.max(0, totalReturnTarget - principalAmount))} | Total {Math.ceil(totalReturnTarget / (fixKistAmount || 1))} Installments
               </div>
             </div>
           ) : (

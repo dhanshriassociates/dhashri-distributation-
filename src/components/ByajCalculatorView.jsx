@@ -62,7 +62,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
       emiAmount = Math.round(target / count);
     }
 
-    installmentFrequency = fixFrequency === 'daily' ? 'Daily (दैनिक / रोज़)' : fixFrequency === 'weekly' ? 'Weekly (साप्ताहिक / हफ़्ता)' : 'Monthly (मासिक / माह)';
+    installmentFrequency = fixFrequency === 'daily' ? 'Daily' : fixFrequency === 'weekly' ? 'Weekly' : 'Monthly';
   } else if (calcType === 'monthly_flat') {
     // Flat monthly interest: Interest = P * (rate/100) * months
     totalInterest = Math.round(p * (r / 100) * t);
@@ -104,9 +104,9 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
   const handleWhatsAppShare = () => {
     let text = '';
     if (calcType === 'fix_total') {
-      const freqHindi = fixFrequency === 'daily' ? 'रोज़ाना (Daily)' : fixFrequency === 'weekly' ? 'साप्ताहिक (Weekly)' : 'मासिक (Monthly)';
-      const unitHindi = fixFrequency === 'daily' ? 'दिन' : fixFrequency === 'weekly' ? 'हफ़्ते' : 'माह';
-      text = `*धनश्री एसोसिएट्स - लोन हिसाब पर्ची*\n━━━━━━━━━━━━━━━━━━━━\n👤 *सीधा व सरल हिसाब*\n💰 दिए गए पैसे: ₹${p.toLocaleString('en-IN')}\n🎯 कुल वापस देने हैं: ₹${totalPayable.toLocaleString('en-IN')}\n📈 कुल मुनाफा / ब्याज: ₹${totalInterest.toLocaleString('en-IN')}\n\n🗓️ किस्त प्रकार: ${freqHindi}\n💵 किस्त राशि: ₹${emiAmount.toLocaleString('en-IN')} / ${unitHindi}\n🔢 कुल किस्तें (अवधि): ${totalInstallmentCount} ${unitHindi}\n━━━━━━━━━━━━━━━━━━━━\n✅ *कुल हिसाब: ₹${emiAmount.toLocaleString('en-IN')} × ${totalInstallmentCount} = ₹${totalPayable.toLocaleString('en-IN')}*\nधन्यवाद - धनश्री एसोसिएट्स`;
+      const freqLabel = fixFrequency === 'daily' ? 'Daily' : fixFrequency === 'weekly' ? 'Weekly' : 'Monthly';
+      const unitLabel = fixFrequency === 'daily' ? 'Days' : fixFrequency === 'weekly' ? 'Weeks' : 'Months';
+      text = `*DHANSHRI ASSOCIATES - LOAN QUOTATION SLIP*\n━━━━━━━━━━━━━━━━━━━━\n📋 *Fixed Total Repayment Scheme*\n💰 Principal Disbursed: ₹${p.toLocaleString('en-IN')}\n🎯 Total Target Repayment: ₹${totalPayable.toLocaleString('en-IN')}\n📈 Total Expected Profit: ₹${totalInterest.toLocaleString('en-IN')}\n\n🗓️ Payment Frequency: ${freqLabel}\n💵 Installment Amount: ₹${emiAmount.toLocaleString('en-IN')} / ${unitLabel.slice(0, -1)}\n🔢 Total Duration: ${totalInstallmentCount} ${unitLabel}\n━━━━━━━━━━━━━━━━━━━━\n✅ *Repayment Summary: ₹${emiAmount.toLocaleString('en-IN')} × ${totalInstallmentCount} = ₹${totalPayable.toLocaleString('en-IN')}*\nThank you - Dhanshri Associates`;
     } else {
       text = `*DHANSHRI ASSOCIATES - LOAN ESTIMATE*\nPrincipal: ₹${p.toLocaleString('en-IN')}\nType: ${calcType === 'daily_scheme' ? 'Daily Collection Scheme' : calcType === 'monthly_flat' ? 'Monthly Flat Byaj' : 'Reducing EMI'}\nDuration: ${t} ${installmentFrequency === 'Daily' ? 'Days' : 'Months'}\nInterest Rate: ${r}% / month\n${installmentFrequency} Installment: ₹${emiAmount.toLocaleString('en-IN')}\nTotal Interest: ₹${totalInterest.toLocaleString('en-IN')}\nNet In Hand: ₹${netInHand.toLocaleString('en-IN')}\nTotal Repayment: ₹${totalPayable.toLocaleString('en-IN')}`;
     }
@@ -186,7 +186,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
           boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
         }}>
           <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', marginBottom: '1.2rem' }}>
-            1. Select Lending Scheme & Terms (लोन स्कीम चुनें)
+            1. Select Lending Scheme & Terms
           </h3>
 
           {/* Scheme Switcher Tabs */}
@@ -205,7 +205,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                 textAlign: 'center'
               }}
             >
-              🌟 फिक्स कुल वापसी (₹85k दिए ➔ ₹1L)
+              🌟 Fixed Total Return (₹85k ➔ ₹100k)
             </button>
 
             <button
@@ -222,7 +222,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                 textAlign: 'center'
               }}
             >
-              Monthly Flat Byaj (% / mo)
+              Monthly Flat Interest (% / mo)
             </button>
 
             <button
@@ -264,7 +264,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
             {/* Principal */}
             <div>
               <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.4rem' }}>
-                {calcType === 'fix_total' ? 'दिए गए रुपये (Principal Given)' : 'Principal Amount (₹)'}
+                {calcType === 'fix_total' ? 'Principal Disbursed (₹)' : 'Principal Amount (₹)'}
               </label>
               <div style={{ position: 'relative' }}>
                 <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#059669', fontWeight: 800, fontSize: '1.1rem' }}>₹</span>
@@ -299,7 +299,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                 {/* Total Target */}
                 <div>
                   <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#065F46', display: 'block', marginBottom: '0.35rem' }}>
-                    कुल वापस कितने लेने हैं? (Total Return Target) *
+                    Total Target Repayment (₹) *
                   </label>
                   <div style={{ position: 'relative' }}>
                     <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#059669', fontWeight: 800, fontSize: '1.1rem' }}>₹</span>
@@ -315,13 +315,13 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                 {/* Frequency */}
                 <div>
                   <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#065F46', display: 'block', marginBottom: '0.35rem' }}>
-                    किस्त का समय (Frequency)
+                    Payment Frequency
                   </label>
                   <div style={{ display: 'flex', gap: '0.4rem' }}>
                     {[
-                      { id: 'daily', label: '☀️ दैनिक (Daily / रोज़)' },
-                      { id: 'weekly', label: '📅 साप्ताहिक (Weekly / हफ़्ता)' },
-                      { id: 'monthly', label: '📆 मासिक (Monthly / माह)' }
+                      { id: 'daily', label: '☀️ Daily' },
+                      { id: 'weekly', label: '📅 Weekly' },
+                      { id: 'monthly', label: '📆 Monthly' }
                     ].map(f => (
                       <button
                         key={f.id}
@@ -363,7 +363,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                         cursor: 'pointer'
                       }}
                     >
-                      ₹ किस्त राशि तय करें
+                      ₹ Set Installment Amount
                     </button>
                     <button
                       type="button"
@@ -380,7 +380,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                         cursor: 'pointer'
                       }}
                     >
-                      🔢 कुल दिन / किस्तें
+                      🔢 Set Duration
                     </button>
                   </div>
 
@@ -394,7 +394,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                         style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '1rem', fontWeight: 800, color: '#4F46E5' }}
                       />
                       <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700, marginTop: '0.2rem', display: 'block' }}>
-                        ➔ {totalInstallmentCount} {fixFrequency === 'daily' ? 'दिन (Days)' : fixFrequency === 'weekly' ? 'हफ़्ते (Weeks)' : 'महीने (Months)'} में पूरा होगा
+                        ➔ Fully settled in {totalInstallmentCount} {fixFrequency === 'daily' ? 'Days' : fixFrequency === 'weekly' ? 'Weeks' : 'Months'}
                       </span>
                     </div>
                   ) : (
@@ -407,7 +407,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                         style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '1rem', fontWeight: 800, color: '#4F46E5' }}
                       />
                       <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700, marginTop: '0.2rem', display: 'block' }}>
-                        ➔ हर {fixFrequency === 'daily' ? 'दिन' : fixFrequency === 'weekly' ? 'हफ़्ते' : 'माह'} ₹{emiAmount.toLocaleString('en-IN')} किस्त बनेगी
+                        ➔ Installment amount: ₹{emiAmount.toLocaleString('en-IN')} per {fixFrequency === 'daily' ? 'day' : fixFrequency === 'weekly' ? 'week' : 'month'}
                       </span>
                     </div>
                   )}
@@ -493,7 +493,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                   gap: '0.5rem'
                 }}
               >
-                Disburse This Loan Now (तुरंत लोन दें) <ArrowRight size={16} />
+                Disburse This Loan Now <ArrowRight size={16} />
               </button>
             )}
 
@@ -518,7 +518,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                   Dhanshri Loan Estimate
                 </span>
                 <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFF' }}>
-                  {calcType === 'fix_total' ? '🌟 Fix Total Wapsi Plan' : calcType === 'daily_scheme' ? 'Daily Collection Plan' : calcType === 'monthly_flat' ? 'Monthly Flat Interest Plan' : 'Reducing Balance Plan'}
+                  {calcType === 'fix_total' ? '🌟 Fixed Total Return Plan' : calcType === 'daily_scheme' ? 'Daily Collection Plan' : calcType === 'monthly_flat' ? 'Monthly Flat Interest Plan' : 'Reducing Balance Plan'}
                 </h4>
               </div>
               <span style={{ background: 'rgba(16, 185, 129, 0.2)', border: '1px solid #10B981', color: '#34D399', fontSize: '0.72rem', fontWeight: 800, padding: '0.2rem 0.6rem', borderRadius: '12px' }}>
@@ -529,20 +529,20 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
             {/* Big Installment Amount */}
             <div style={{ background: 'rgba(255, 255, 255, 0.05)', borderRadius: '12px', padding: '1.2rem', marginBottom: '1.4rem', border: '1px solid rgba(255,255,255,0.08)' }}>
               <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>
-                {installmentFrequency} Installment Amount (किस्त राशि)
+                {installmentFrequency} Installment Amount
               </div>
               <div style={{ fontSize: '2.4rem', fontWeight: 900, color: '#34D399', margin: '0.2rem 0' }}>
                 {formatINR(emiAmount)}
               </div>
               <div style={{ fontSize: '0.74rem', color: '#CBD5E1' }}>
-                for {totalInstallmentCount} {calcType === 'fix_total' ? (fixFrequency === 'daily' ? 'Days (दिन)' : fixFrequency === 'weekly' ? 'Weeks (हफ़्ते)' : 'Months (महीने)') : (installmentFrequency === 'Daily' ? 'Days' : 'Months')} = Total Repayment of {formatINR(totalPayable)}
+                for {totalInstallmentCount} {calcType === 'fix_total' ? (fixFrequency === 'daily' ? 'Days' : fixFrequency === 'weekly' ? 'Weeks' : 'Months') : (installmentFrequency === 'Daily' ? 'Days' : 'Months')} = Total Repayment of {formatINR(totalPayable)}
               </div>
             </div>
 
             {/* Breakdown List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem', fontSize: '0.85rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '0.4rem' }}>
-                <span style={{ color: '#94A3B8' }}>दिए गए पैसे (Principal Financed):</span>
+                <span style={{ color: '#94A3B8' }}>Principal Financed:</span>
                 <span style={{ fontWeight: 800, color: '#FFF' }}>{formatINR(p)}</span>
               </div>
 
@@ -554,17 +554,17 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
               )}
 
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '0.4rem' }}>
-                <span style={{ color: '#94A3B8' }}>शुद्ध मुनाफा / ब्याज (Profit / Interest):</span>
+                <span style={{ color: '#94A3B8' }}>Expected Net Profit:</span>
                 <span style={{ fontWeight: 800, color: '#FBBF24' }}>+ {formatINR(totalInterest)} ({p > 0 ? ((totalInterest / p) * 100).toFixed(1) : 0}%)</span>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '0.4rem' }}>
-                <span style={{ color: '#94A3B8' }}>किस्त का नियम (Installment Rule):</span>
-                <span style={{ fontWeight: 800, color: '#38BDF8' }}>₹{emiAmount.toLocaleString('en-IN')} × {totalInstallmentCount} किस्तें</span>
+                <span style={{ color: '#94A3B8' }}>Repayment Terms:</span>
+                <span style={{ fontWeight: 800, color: '#38BDF8' }}>₹{emiAmount.toLocaleString('en-IN')} × {totalInstallmentCount} installments</span>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.3rem' }}>
-                <span style={{ color: '#FFF', fontWeight: 800 }}>कुल वापस लेने हैं (Total Repayment):</span>
+                <span style={{ color: '#FFF', fontWeight: 800 }}>Total Repayment Target:</span>
                 <span style={{ fontWeight: 900, fontSize: '1.15rem', color: '#34D399' }}>{formatINR(totalPayable)}</span>
               </div>
             </div>
@@ -572,7 +572,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
 
           <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '0.72rem', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span>Auto-calculated by Dhanshri Associates</span>
-            <span>Easy illiterate-friendly calculation</span>
+            <span>Transparent & simple lending agreement</span>
           </div>
         </div>
 

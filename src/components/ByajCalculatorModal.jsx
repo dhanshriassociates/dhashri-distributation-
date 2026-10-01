@@ -57,7 +57,7 @@ export default function ByajCalculatorModal({ onClose }) {
               cursor: 'pointer'
             }}
           >
-            🌟 फिक्स कुल वापसी (₹85k ➔ ₹1L)
+            🌟 Fixed Total Return (₹85k ➔ ₹100k)
           </button>
           <button
             type="button"
@@ -74,7 +74,7 @@ export default function ByajCalculatorModal({ onClose }) {
               cursor: 'pointer'
             }}
           >
-            Monthly % Byaj
+            Monthly % Interest
           </button>
         </div>
 
@@ -84,7 +84,7 @@ export default function ByajCalculatorModal({ onClose }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div>
                 <label style={{ fontSize: '0.78rem', color: '#0F172A', fontWeight: 700, display: 'block', marginBottom: '0.35rem' }}>
-                  दिए गए पैसे (Principal) ₹
+                  Principal Disbursed (₹)
                 </label>
                 <input
                   type="number"
@@ -97,7 +97,7 @@ export default function ByajCalculatorModal({ onClose }) {
 
               <div>
                 <label style={{ fontSize: '0.78rem', color: '#0F172A', fontWeight: 700, display: 'block', marginBottom: '0.35rem' }}>
-                  कुल वापस लेने हैं (Target) ₹
+                  Total Target Repayment (₹)
                 </label>
                 <input
                   type="number"
@@ -112,7 +112,7 @@ export default function ByajCalculatorModal({ onClose }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div>
                 <label style={{ fontSize: '0.78rem', color: '#0F172A', fontWeight: 700, display: 'block', marginBottom: '0.35rem' }}>
-                  किस्त प्रकार (Frequency)
+                  Payment Frequency
                 </label>
                 <select
                   value={fixFrequency}
@@ -120,15 +120,15 @@ export default function ByajCalculatorModal({ onClose }) {
                   className="form-select"
                   style={{ fontWeight: 600 }}
                 >
-                  <option value="daily">☀️ दैनिक (Daily / रोज़ाना)</option>
-                  <option value="weekly">📅 साप्ताहिक (Weekly / हफ़्ते)</option>
-                  <option value="monthly">📆 मासिक (Monthly / महीने)</option>
+                  <option value="daily">☀️ Daily</option>
+                  <option value="weekly">📅 Weekly</option>
+                  <option value="monthly">📆 Monthly</option>
                 </select>
               </div>
 
               <div>
                 <label style={{ fontSize: '0.78rem', color: '#0F172A', fontWeight: 700, display: 'block', marginBottom: '0.35rem' }}>
-                  प्रति किस्त राशि (₹ / Kist)
+                  Installment Amount (₹)
                 </label>
                 <input
                   type="number"
@@ -196,30 +196,30 @@ export default function ByajCalculatorModal({ onClose }) {
             gap: '0.8rem'
           }}>
             <h4 style={{ fontSize: '0.82rem', fontWeight: 800, color: '#065F46', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              सीधा हिसाब (Fix Return Summary)
+              Fixed Total Return Summary
             </h4>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', borderBottom: '1px solid #BBF7D0', paddingBottom: '0.5rem' }}>
-              <span style={{ color: '#065F46' }}>किस्त राशि (Installment):</span>
+              <span style={{ color: '#065F46' }}>Installment Amount:</span>
               <strong style={{ color: '#059669', fontSize: '1.1rem' }}>
-                {formatINR(fixCalc.installmentAmount)} / {fixFrequency === 'daily' ? 'दिन' : fixFrequency === 'weekly' ? 'हफ़्ता' : 'माह'}
+                {formatINR(fixCalc.installmentAmount)} / {fixFrequency === 'daily' ? 'day' : fixFrequency === 'weekly' ? 'week' : 'mo'}
               </strong>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', borderBottom: '1px solid #BBF7D0', paddingBottom: '0.5rem' }}>
-              <span style={{ color: '#065F46' }}>कुल किस्तें (अवधि):</span>
+              <span style={{ color: '#065F46' }}>Total Duration:</span>
               <strong style={{ color: '#047857' }}>
-                {fixCalc.totalInstallments} {fixFrequency === 'daily' ? 'दिन (Days)' : fixFrequency === 'weekly' ? 'हफ़्ते (Weeks)' : 'महीने (Months)'}
+                {fixCalc.totalInstallments} {fixFrequency === 'daily' ? 'Days' : fixFrequency === 'weekly' ? 'Weeks' : 'Months'}
               </strong>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', borderBottom: '1px solid #BBF7D0', paddingBottom: '0.5rem' }}>
-              <span style={{ color: '#065F46' }}>कुल शुद्ध मुनाफा / ब्याज:</span>
+              <span style={{ color: '#065F46' }}>Total Expected Profit:</span>
               <strong style={{ color: '#B45309' }}>{formatINR(fixCalc.totalProfit)} ({fixCalc.profitPercentage}%)</strong>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem' }}>
-              <span style={{ color: '#0F172A', fontWeight: 800 }}>कुल वापस लेने हैं:</span>
+              <span style={{ color: '#0F172A', fontWeight: 800 }}>Total Target Repayment:</span>
               <strong style={{ color: '#065F46', fontSize: '1.2rem' }}>{formatINR(fixCalc.totalRepayment)}</strong>
             </div>
           </div>

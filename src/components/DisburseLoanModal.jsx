@@ -338,7 +338,7 @@ export default function DisburseLoanModal({
     const newAccountId = `ACC-FIN-${Math.floor(100 + Math.random() * 900)}`;
 
     const targetReturnVal = interestScheme === 'fix_total' ? (parseFloat(totalReturnTarget) || principal) : (principal + estimatedTotalInterest);
-    const freqLabel = fixFrequency === 'daily' ? 'दिन' : fixFrequency === 'weekly' ? 'हफ़्ता' : 'माह';
+    const freqLabel = fixFrequency === 'daily' ? 'day' : fixFrequency === 'weekly' ? 'wk' : 'mo';
 
     const newFinanceAccount = {
       id: newAccountId,
@@ -350,7 +350,7 @@ export default function DisburseLoanModal({
       customerPan: customerToUse.pan,
       customerPhoto: customerToUse.photo,
       productName: interestScheme === 'fix_total'
-        ? `Fix Wapsi (₹${principal.toLocaleString('en-IN')} दिए ➔ ₹${targetReturnVal.toLocaleString('en-IN')} कुल | ₹${Math.round(estimatedEmi).toLocaleString('en-IN')}/${freqLabel})`
+        ? `Fixed Return (₹${principal.toLocaleString('en-IN')} Disbursed ➔ ₹${targetReturnVal.toLocaleString('en-IN')} Target | ₹${Math.round(estimatedEmi).toLocaleString('en-IN')}/${freqLabel})`
         : interestScheme === 'monthly_percent' 
         ? `Monthly Interest (${monthlyInterestRate}% / mo)` 
         : interestScheme === 'daily_fixed' 
@@ -864,7 +864,7 @@ export default function DisburseLoanModal({
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.2rem' }}>
               <div>
                 <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                  {interestScheme === 'fix_total' ? 'Principal Given (दिए गए रुपये) *' : 'Principal Loan Amount (₹) *'}
+                  {interestScheme === 'fix_total' ? 'Principal Disbursed (₹) *' : 'Principal Loan Amount (₹) *'}
                 </label>
                 <div style={{ position: 'relative' }}>
                   <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: '#059669', fontSize: '1.1rem' }}>₹</span>
@@ -883,7 +883,7 @@ export default function DisburseLoanModal({
 
               <div>
                 <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                  Interest Calculation Scheme (लोन स्कीम) *
+                  Interest Calculation Scheme *
                 </label>
                 <select
                   value={interestScheme}
@@ -891,9 +891,9 @@ export default function DisburseLoanModal({
                   className="form-select"
                   style={{ fontWeight: 700, color: interestScheme === 'fix_total' ? '#059669' : '#1E293B', background: interestScheme === 'fix_total' ? '#ECFDF5' : '#FFF' }}
                 >
-                  <option value="fix_total">🌟 फिक्स कुल वापसी (Fixed Return: ₹85k दिए ➔ ₹1 Lakh लेने)</option>
-                  <option value="monthly_percent">Monthly % Byaj (e.g. 2% / month = 24% p.a.)</option>
-                  <option value="daily_fixed">Daily Fixed Byaj (₹ / day)</option>
+                  <option value="fix_total">🌟 Fixed Total Return (e.g. ₹85k Disbursed ➔ ₹100k Target)</option>
+                  <option value="monthly_percent">Monthly % Interest (e.g. 2% / month = 24% p.a.)</option>
+                  <option value="daily_fixed">Daily Fixed Interest (₹ / day)</option>
                   <option value="reducing_emi">Reducing Balance Bank EMI (% p.a.)</option>
                   <option value="flat_emi">Flat Rate EMI (% p.a.)</option>
                 </select>
@@ -914,11 +914,11 @@ export default function DisburseLoanModal({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Sparkles size={18} color="#059669" />
                     <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#065F46' }}>
-                      फिक्स कुल वापसी स्कीम (Fixed Total Return Configuration)
+                      Fixed Total Return Configuration
                     </h4>
                   </div>
                   <span style={{ fontSize: '0.72rem', background: '#059669', color: '#FFF', padding: '0.2rem 0.6rem', borderRadius: '12px', fontWeight: 700 }}>
-                    अनपढ़ ग्राहकों के लिए आसान हिसाब
+                    Clear Borrowing Agreement
                   </span>
                 </div>
 
@@ -926,7 +926,7 @@ export default function DisburseLoanModal({
                   {/* Total Return Target Input */}
                   <div>
                     <label style={{ fontSize: '0.78rem', color: '#065F46', fontWeight: 700, display: 'block', marginBottom: '0.35rem' }}>
-                      कुल वापस कितने लेने हैं? (Total Return Target) *
+                      Target Repayment Amount (₹) *
                     </label>
                     <div style={{ position: 'relative' }}>
                       <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: '#059669', fontSize: '1.1rem' }}>₹</span>
@@ -942,20 +942,20 @@ export default function DisburseLoanModal({
                       />
                     </div>
                     <div style={{ fontSize: '0.72rem', color: '#047857', fontWeight: 600, marginTop: '0.25rem' }}>
-                      कुल मुनाफा / ब्याज: <strong>{formatCurrency(Math.max(0, (parseFloat(totalReturnTarget) || principal) - principal))}</strong>
+                      Total Profit / Yield: <strong>{formatCurrency(Math.max(0, (parseFloat(totalReturnTarget) || principal) - principal))}</strong>
                     </div>
                   </div>
 
                   {/* Frequency: Daily / Weekly / Monthly */}
                   <div>
                     <label style={{ fontSize: '0.78rem', color: '#065F46', fontWeight: 700, display: 'block', marginBottom: '0.35rem' }}>
-                      किस्त का समय (Payment Frequency) *
+                      Payment Frequency *
                     </label>
                     <div style={{ display: 'flex', gap: '0.4rem' }}>
                       {[
-                        { id: 'daily', label: '☀️ दैनिक (रोज़)', icon: Sun },
-                        { id: 'weekly', label: '📅 साप्ताहिक (हफ़्ता)', icon: Repeat },
-                        { id: 'monthly', label: '📆 मासिक (माह)', icon: Calendar }
+                        { id: 'daily', label: '☀️ Daily', icon: Sun },
+                        { id: 'weekly', label: '📅 Weekly', icon: Repeat },
+                        { id: 'monthly', label: '📆 Monthly', icon: Calendar }
                       ].map(freq => (
                         <button
                           key={freq.id}
@@ -983,7 +983,7 @@ export default function DisburseLoanModal({
                   {/* Mode: By Kist Amount vs By Total Count */}
                   <div>
                     <label style={{ fontSize: '0.78rem', color: '#065F46', fontWeight: 700, display: 'block', marginBottom: '0.35rem' }}>
-                      किस्त तय करने का तरीका *
+                      Calculation Method *
                     </label>
                     <div style={{ display: 'flex', gap: '0.4rem' }}>
                       <button
@@ -1001,7 +1001,7 @@ export default function DisburseLoanModal({
                           cursor: 'pointer'
                         }}
                       >
-                        ₹ किस्त राशि तय करें
+                        ₹ Set Installment Amount
                       </button>
                       <button
                         type="button"
@@ -1018,7 +1018,7 @@ export default function DisburseLoanModal({
                           cursor: 'pointer'
                         }}
                       >
-                        🔢 कुल दिन / किस्तें
+                        🔢 Set Duration
                       </button>
                     </div>
                   </div>
@@ -1029,7 +1029,7 @@ export default function DisburseLoanModal({
                   {fixKistMode === 'by_amount' ? (
                     <div>
                       <label style={{ fontSize: '0.78rem', color: '#1E293B', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>
-                        ग्राहक हर {fixFrequency === 'daily' ? 'दिन' : fixFrequency === 'weekly' ? 'हफ़्ते' : 'महीने'} कितना देगा? (₹ / किस्त) *
+                        Customer Installment Amount (₹ / {fixFrequency === 'daily' ? 'day' : fixFrequency === 'weekly' ? 'week' : 'month'}) *
                       </label>
                       <div style={{ position: 'relative' }}>
                         <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: '#4F46E5' }}>₹</span>
@@ -1044,13 +1044,13 @@ export default function DisburseLoanModal({
                         />
                       </div>
                       <div style={{ fontSize: '0.74rem', color: '#059669', fontWeight: 700, marginTop: '0.3rem' }}>
-                        ➔ कुल <strong>{fixCalculatedDays}</strong> {fixFrequency === 'daily' ? 'दिन (Days)' : fixFrequency === 'weekly' ? 'हफ़्ते (Weeks)' : 'महीने (Months)'} में लोन चुकता होगा
+                        ➔ Fully settled in <strong>{fixCalculatedDays}</strong> {fixFrequency === 'daily' ? 'Days' : fixFrequency === 'weekly' ? 'Weeks' : 'Months'}
                       </div>
                     </div>
                   ) : (
                     <div>
                       <label style={{ fontSize: '0.78rem', color: '#1E293B', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>
-                        कुल कितनी किस्तें / दिन में पैसा आएगा? *
+                        Total Number of Installments / Duration *
                       </label>
                       <input
                         type="number"
@@ -1062,14 +1062,14 @@ export default function DisburseLoanModal({
                         style={{ fontWeight: 800, fontSize: '1.05rem', color: '#4F46E5' }}
                       />
                       <div style={{ fontSize: '0.74rem', color: '#059669', fontWeight: 700, marginTop: '0.3rem' }}>
-                        ➔ हर {fixFrequency === 'daily' ? 'दिन' : fixFrequency === 'weekly' ? 'हफ़्ते' : 'माह'} <strong>{formatCurrency(fixCalculatedInstallment)}</strong> की किस्त बनेगी
+                        ➔ Installment amount: <strong>{formatCurrency(fixCalculatedInstallment)}</strong> per {fixFrequency === 'daily' ? 'day' : fixFrequency === 'weekly' ? 'week' : 'month'}
                       </div>
                     </div>
                   )}
 
                   <div>
                     <label style={{ fontSize: '0.78rem', color: '#1E293B', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>
-                      लोन शुरू होने की तारीख (Disbursal Date)
+                      Disbursal Date
                     </label>
                     <input
                       type="date"
@@ -1079,12 +1079,12 @@ export default function DisburseLoanModal({
                       style={{ fontWeight: 600 }}
                     />
                     <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '0.3rem' }}>
-                      समाप्ति तिथि (End Date): <strong style={{ color: '#0F172A' }}>{fixEndDateStr}</strong>
+                      Estimated End Date: <strong style={{ color: '#0F172A' }}>{fixEndDateStr}</strong>
                     </div>
                   </div>
                 </div>
 
-                {/* Customer Explanation Ribbon in Simple Hindi */}
+                {/* Customer Explanation Ribbon */}
                 <div style={{
                   background: '#064E3B',
                   color: '#ECFDF5',
@@ -1098,10 +1098,10 @@ export default function DisburseLoanModal({
                   fontSize: '0.82rem'
                 }}>
                   <div>
-                    <strong>📋 ग्राहक के लिए सीधा हिसाब:</strong> दिए: <strong>{formatCurrency(principal)}</strong> ➔ वापस लेंगे: <strong>{formatCurrency(totalReturnTarget)}</strong> (मुनाफा: +{formatCurrency(estimatedTotalInterest)})
+                    <strong>📋 Borrowing Terms Summary:</strong> Disbursed: <strong>{formatCurrency(principal)}</strong> ➔ Repayment Target: <strong>{formatCurrency(totalReturnTarget)}</strong> (Profit: +{formatCurrency(estimatedTotalInterest)})
                   </div>
                   <div style={{ background: '#059669', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: 800, color: '#FFF' }}>
-                    {formatCurrency(estimatedEmi)} / {fixFrequency === 'daily' ? 'दिन' : fixFrequency === 'weekly' ? 'हफ़्ता' : 'माह'} × {fixCalculatedDays} किस्तें
+                    {formatCurrency(estimatedEmi)} / {fixFrequency === 'daily' ? 'day' : fixFrequency === 'weekly' ? 'week' : 'month'} × {fixCalculatedDays} installments
                   </div>
                 </div>
               </div>
@@ -1189,35 +1189,35 @@ export default function DisburseLoanModal({
               marginBottom: '1rem'
             }}>
               <div>
-                <span style={{ fontSize: '0.7rem', color: '#166534', fontWeight: 600, textTransform: 'uppercase' }}>Principal Disbursed (दिए)</span>
+                <span style={{ fontSize: '0.7rem', color: '#166534', fontWeight: 600, textTransform: 'uppercase' }}>Principal Disbursed</span>
                 <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#14532D' }}>{formatCurrency(principal)}</div>
               </div>
 
               <div>
                 <span style={{ fontSize: '0.7rem', color: '#166534', fontWeight: 600, textTransform: 'uppercase' }}>
-                  {interestScheme === 'fix_total' ? 'Installment (किस्त राशि)' : 'Monthly Installment / EMI'}
+                  {interestScheme === 'fix_total' ? 'Installment Amount' : 'Monthly Installment / EMI'}
                 </span>
                 <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#15803D' }}>
-                  {formatCurrency(estimatedEmi)} {interestScheme === 'fix_total' ? `/${fixFrequency === 'daily' ? 'दिन' : fixFrequency === 'weekly' ? 'हफ़्ता' : 'माह'}` : ''}
+                  {formatCurrency(estimatedEmi)} {interestScheme === 'fix_total' ? `/${fixFrequency === 'daily' ? 'day' : fixFrequency === 'weekly' ? 'week' : 'mo'}` : ''}
                 </div>
               </div>
 
               <div>
                 <span style={{ fontSize: '0.7rem', color: '#166534', fontWeight: 600, textTransform: 'uppercase' }}>
-                  {interestScheme === 'fix_total' ? 'Total Kistein (कुल किस्तें)' : 'Total Months'}
+                  {interestScheme === 'fix_total' ? 'Total Installments' : 'Total Months'}
                 </span>
                 <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#047857' }}>
-                  {interestScheme === 'fix_total' ? `${fixCalculatedDays} ${fixFrequency === 'daily' ? 'दिन' : fixFrequency === 'weekly' ? 'हफ़्ते' : 'किस्तें'}` : `${tenureMonths} Months`}
+                  {interestScheme === 'fix_total' ? `${fixCalculatedDays} ${fixFrequency === 'daily' ? 'Days' : fixFrequency === 'weekly' ? 'Weeks' : 'Installments'}` : `${tenureMonths} Months`}
                 </div>
               </div>
 
               <div>
-                <span style={{ fontSize: '0.7rem', color: '#166534', fontWeight: 600, textTransform: 'uppercase' }}>Total Expected Interest (मुनाफा)</span>
+                <span style={{ fontSize: '0.7rem', color: '#166534', fontWeight: 600, textTransform: 'uppercase' }}>Total Expected Yield / Profit</span>
                 <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#B45309' }}>{formatCurrency(estimatedTotalInterest)}</div>
               </div>
 
               <div>
-                <span style={{ fontSize: '0.7rem', color: '#166534', fontWeight: 600, textTransform: 'uppercase' }}>Total Expected Return (कुल वापसी)</span>
+                <span style={{ fontSize: '0.7rem', color: '#166534', fontWeight: 600, textTransform: 'uppercase' }}>Total Target Return</span>
                 <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1E1B4B' }}>{formatCurrency(estimatedTotalReturn)}</div>
               </div>
             </div>

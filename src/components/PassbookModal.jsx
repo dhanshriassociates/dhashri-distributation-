@@ -69,7 +69,7 @@ export default function PassbookModal({
                 Borrower Passbook & Repayment Ledger
                 {isFixTotal && (
                   <span style={{ fontSize: '0.72rem', background: '#ECFDF5', color: '#047857', border: '1px solid #A7F3D0', padding: '0.15rem 0.5rem', borderRadius: '12px' }}>
-                    फिक्स कुल वापसी (Fix Return)
+                    Fixed Total Return
                   </span>
                 )}
               </h3>
@@ -101,10 +101,10 @@ export default function PassbookModal({
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
               <span style={{ fontSize: '0.82rem', fontWeight: 700 }}>
-                🎯 कुल वापसी लक्ष्य: <strong>{formatCurrency(totalTargetRepayment)}</strong> (दिए: {formatCurrency(financedAmount)} | शुद्ध मुनाफा: +{formatCurrency(totalTargetRepayment - financedAmount)})
+                🎯 Target Repayment: <strong>{formatCurrency(totalTargetRepayment)}</strong> (Principal: {formatCurrency(financedAmount)} | Profit: +{formatCurrency(totalTargetRepayment - financedAmount)})
               </span>
               <span style={{ fontSize: '0.78rem', background: '#059669', padding: '0.2rem 0.6rem', borderRadius: '8px', fontWeight: 800 }}>
-                {paidInstallmentsCount} / {totalInstallmentsCount} किस्तें जमा ({progressPercent}%)
+                {paidInstallmentsCount} / {totalInstallmentsCount} Installments Paid ({progressPercent}%)
               </span>
             </div>
 
@@ -146,7 +146,7 @@ export default function PassbookModal({
 
           <div>
             <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 600 }}>
-              {isFixTotal ? 'दिए गए पैसे (Principal)' : 'Principal Disbursed'}
+              Principal Disbursed
             </span>
             <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#059669' }}>{formatCurrency(financedAmount)}</h4>
             <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
@@ -159,7 +159,7 @@ export default function PassbookModal({
 
           <div>
             <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 600 }}>
-              जमा राशि (Collections Received)
+              Collections Received
             </span>
             <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#4F46E5' }}>{formatCurrency(totalPaid)}</h4>
             <div style={{ fontSize: '0.72rem', color: '#059669' }}>
@@ -172,7 +172,7 @@ export default function PassbookModal({
 
           <div>
             <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 600 }}>
-              {isFixTotal ? 'बाकी कुल रकम (Remaining Total)' : 'Outstanding Balance'}
+              Outstanding Balance
             </span>
             <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: remainingBalance > 0 ? '#DC2626' : '#059669' }}>
               {formatCurrency(remainingBalance)}
