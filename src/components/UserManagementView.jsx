@@ -823,26 +823,131 @@ export default function UserManagementView({
       {/* TAB 3: SYSTEM MODULES OVERVIEW */}
       {/* ========================================================= */}
       {activeTab === 'modules' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-          {AVAILABLE_MODULES.map(m => {
-            const Icon = m.icon;
-            const usersWithAccess = appUsers.filter(u => (u.allowedModules || []).includes(m.id)).length;
+        <div style={{
+          background: '#FFFFFF',
+          borderRadius: '14px',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+          overflow: 'hidden'
+        }}>
+          <div style={{ padding: '1rem 1.4rem', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                System Module Catalog
+              </h3>
+              <p style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '0.2rem' }}>
+                All {AVAILABLE_MODULES.length} modules available in this platform and how many users have access.
+              </p>
+            </div>
+            <span style={{ background: '#F1F5F9', padding: '0.3rem 0.75rem', borderRadius: '10px', fontSize: '0.78rem', fontWeight: 700, color: '#475569' }}>
+              {AVAILABLE_MODULES.length} Modules Total
+            </span>
+          </div>
 
-            return (
-              <div key={m.id} style={{ background: '#FFF', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '1.2rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.6rem' }}>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#ECFDF5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon size={18} />
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>{m.label}</h3>
-                    <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700 }}>{usersWithAccess} users granted access</span>
-                  </div>
-                </div>
-                <p style={{ fontSize: '0.76rem', color: '#64748B', margin: 0, lineHeight: 1.4 }}>{m.desc}</p>
-              </div>
-            );
-          })}
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
+              <thead>
+                <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#64748B', fontWeight: 700, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  <th style={{ padding: '0.8rem 1.2rem' }}>#</th>
+                  <th style={{ padding: '0.8rem 1.2rem' }}>Module Name</th>
+                  <th style={{ padding: '0.8rem 1.2rem' }}>Description</th>
+                  <th style={{ padding: '0.8rem 1.2rem', textAlign: 'center' }}>Users with Access</th>
+                  <th style={{ padding: '0.8rem 1.2rem', textAlign: 'center' }}>Access Rate</th>
+                  <th style={{ padding: '0.8rem 1.2rem', textAlign: 'center' }}>Quick Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {AVAILABLE_MODULES.map((m, idx) => {
+                  const Icon = m.icon;
+                  const usersWithAccess = appUsers.filter(u => (u.allowedModules || []).includes(m.id)).length;
+                  const accessRate = appUsers.length > 0 ? Math.round((usersWithAccess / appUsers.length) * 100) : 0;
+
+                  return (
+                    <tr key={m.id} style={{ borderBottom: '1px solid #F1F5F9', transition: 'background 0.15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <td style={{ padding: '0.9rem 1.2rem', color: '#94A3B8', fontWeight: 700, fontSize: '0.76rem' }}>
+                        {idx + 1}
+                      </td>
+
+                      <td style={{ padding: '0.9rem 1.2rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                          <div style={{
+                            width: '34px',
+                            height: '34px',
+                            borderRadius: '8px',
+                            background: '#ECFDF5',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
+                          }}>
+                            <Icon size={16} color="#059669" />
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.86rem' }}>{m.label}</div>
+                            <div style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 500 }}>ID: {m.id}</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td style={{ padding: '0.9rem 1.2rem', color: '#475569', fontSize: '0.8rem', maxWidth: '340px' }}>
+                        {m.desc}
+                      </td>
+
+                      <td style={{ padding: '0.9rem 1.2rem', textAlign: 'center' }}>
+                        <span style={{
+                          fontWeight: 800,
+                          fontSize: '0.92rem',
+                          color: usersWithAccess > 0 ? '#047857' : '#94A3B8'
+                        }}>
+                          {usersWithAccess}
+                        </span>
+                        <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}> / {appUsers.length}</span>
+                      </td>
+
+                      <td style={{ padding: '0.9rem 1.2rem', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem' }}>
+                          <div style={{ height: '6px', width: '80px', background: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{
+                              width: `${accessRate}%`,
+                              height: '100%',
+                              background: accessRate >= 75 ? '#10B981' : accessRate >= 40 ? '#F59E0B' : '#E2E8F0',
+                              borderRadius: '4px'
+                            }} />
+                          </div>
+                          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B' }}>{accessRate}%</span>
+                        </div>
+                      </td>
+
+                      <td style={{ padding: '0.9rem 1.2rem', textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveTab('permissions');
+                          }}
+                          style={{
+                            padding: '0.3rem 0.7rem',
+                            borderRadius: '6px',
+                            border: '1px solid #CBD5E1',
+                            background: '#FFF',
+                            color: '#334155',
+                            fontSize: '0.73rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          Manage Access →
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

@@ -267,3 +267,170 @@ code, pre {
   border-color: #CBD5E1;
   color: #475569;
 }
+
+/* ================================================================
+   RESPONSIVE MOBILE LAYOUT
+   ================================================================ */
+
+/* Header responsive layout */
+.app-header {
+  padding: 0.7rem 1.2rem;
+}
+
+.header-inner {
+  padding: 0;
+}
+
+/* Navigation bar - always scrollable horizontal on all screens */
+.app-header nav {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  flex-wrap: nowrap !important;
+  width: 100%;
+}
+
+.app-header nav::-webkit-scrollbar {
+  display: none; /* Chrome/Safari - hide the scrollbar but keep scroll functional */
+}
+
+/* ---- Tablet (max 1024px) ---- */
+@media (max-width: 1024px) {
+  .app-header {
+    padding: 0.65rem 1rem;
+  }
+
+  .header-inner {
+    gap: 0.6rem;
+  }
+
+  /* Stack brand + user pill on one row, nav below on its own row */
+  .header-inner {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .modal-content {
+    padding: 1.4rem;
+    max-width: 95vw;
+  }
+}
+
+/* ---- Mobile (max 768px) ---- */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0.55rem 0.8rem;
+  }
+
+  /* Reduce brand text on small screens */
+  .app-header h1 {
+    font-size: 0.95rem !important;
+  }
+
+  /* Main content padding reduced */
+  main > * {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  /* Modal full width on mobile */
+  .modal-overlay {
+    padding: 0.5rem;
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    padding: 1.2rem;
+    max-height: 92vh;
+    border-radius: 16px 16px 8px 8px;
+    max-width: 100%;
+  }
+
+  /* Tables scroll horizontally on mobile */
+  table {
+    min-width: 580px;
+  }
+
+  /* Grid columns collapse to single column */
+  [style*="grid-template-columns: repeat(auto-fit"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Form grids: 2-col -> 1-col */
+  [style*="gridTemplateColumns: '1fr 1fr'"],
+  [style*='gridTemplateColumns: "1fr 1fr"'] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ---- Small Mobile (max 480px) ---- */
+@media (max-width: 480px) {
+  .app-header {
+    padding: 0.5rem 0.65rem;
+  }
+
+  .app-header h1 {
+    font-size: 0.88rem !important;
+  }
+
+  /* DB badge hidden on very small screens to save space */
+  .app-header h1 + div {
+    display: none !important;
+  }
+
+  /* Reduce nav tab label size */
+  .app-header nav button {
+    font-size: 0.72rem !important;
+    padding: 0.35rem 0.55rem !important;
+    gap: 0.2rem !important;
+  }
+
+  /* Global search hidden on very small screens */
+  .app-header nav ~ div > div[style*="width: '170px'"] {
+    display: none;
+  }
+
+  main > * {
+    padding-left: 0.6rem !important;
+    padding-right: 0.6rem !important;
+  }
+
+  .modal-content {
+    padding: 1rem;
+  }
+
+  /* Card metric grids */
+  [style*="minmax(240px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  [style*="minmax(230px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  [style*="minmax(220px"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ================================================================
+   PRINT STYLES (for Day-Book, Quotation prints)
+   ================================================================ */
+@media print {
+  .app-header,
+  nav,
+  button {
+    display: none !important;
+  }
+
+  body {
+    background: #FFF !important;
+    color: #000 !important;
+  }
+
+  .modal-overlay {
+    position: static !important;
+    background: transparent !important;
+  }
+}

@@ -74,35 +74,35 @@ export default function Header({
   const canDisburse = currentUser?.permissions ? currentUser.permissions.canDisburseLoan : true;
 
   return (
-    <header style={{
-      background: 'rgba(255, 255, 255, 0.95)',
+    <header className="app-header" style={{
+      background: 'rgba(255, 255, 255, 0.96)',
       backdropFilter: 'blur(20px)',
       borderBottom: '1px solid var(--border-subtle)',
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      padding: '0.8rem 1.8rem',
       boxShadow: '0 2px 10px rgba(0,0,0,0.03)'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1.2rem', flexWrap: 'wrap' }}>
+      <div className="header-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.8rem', flexWrap: 'wrap' }}>
         
         {/* Brand Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
           <div style={{
-            width: '38px',
-            height: '38px',
+            width: '36px',
+            height: '36px',
             borderRadius: '10px',
             background: 'linear-gradient(135deg, #4F46E5, #059669)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 12px var(--accent-indigo-glow)'
+            boxShadow: '0 4px 12px var(--accent-indigo-glow)',
+            flexShrink: 0
           }}>
-            <Landmark size={22} color="#FFF" />
+            <Landmark size={20} color="#FFF" />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <h1 style={{ fontSize: '1.2rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#0F172A' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+              <h1 style={{ fontSize: '1.1rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#0F172A', whiteSpace: 'nowrap' }}>
                 FINANCE <span style={{ color: 'var(--accent-indigo)' }}>PLATFORM</span>
               </h1>
               <div style={{
