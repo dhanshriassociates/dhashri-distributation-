@@ -437,48 +437,77 @@ export default function StaffManagerView({
                 </div>
               </div>
 
-              {/* Status and Permissions */}
+              {/* Module-Based Permissions & Access */}
               <div style={{ background: '#F8FAFC', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', marginBottom: '1.2rem' }}>
-                <span style={{ fontSize: '0.76rem', color: 'var(--text-dim)', fontWeight: 700, textTransform: 'uppercase', display: 'block', marginBottom: '0.6rem' }}>
-                  System Permissions & Access
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+                  <span style={{ fontSize: '0.76rem', color: '#0F172A', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Module Permissions & Operational Access
+                  </span>
+                  <span style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 600 }}>
+                    Select specific module rights
+                  </span>
+                </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.82rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.permissions.canCollect}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        permissions: { ...formData.permissions, canCollect: e.target.checked }
-                      })}
-                    />
-                    <span>Allow Collecting Payments & Generating Receipts</span>
-                  </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                  {/* Module 1: Collections & Today's Route */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.45rem 0.6rem', background: '#FFF', borderRadius: '6px', border: '1px solid #E2E8F0' }}>
+                    <div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0F172A' }}>Today's Due Route & Collections</div>
+                      <div style={{ fontSize: '0.7rem', color: '#64748B' }}>View daily route & collect payment receipts</div>
+                    </div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.canCollect}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          permissions: { ...formData.permissions, canCollect: e.target.checked }
+                        })}
+                        style={{ accentColor: '#059669' }}
+                      />
+                      <span>Active</span>
+                    </label>
+                  </div>
 
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.82rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.permissions.canDisburse}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        permissions: { ...formData.permissions, canDisburse: e.target.checked }
-                      })}
-                    />
-                    <span>Allow Disbursing New Loans to Borrowers</span>
-                  </label>
+                  {/* Module 2: Loan Disbursals */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.45rem 0.6rem', background: '#FFF', borderRadius: '6px', border: '1px solid #E2E8F0' }}>
+                    <div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0F172A' }}>Loan Disbursal & Capital Giving</div>
+                      <div style={{ fontSize: '0.7rem', color: '#64748B' }}>Allow creating and releasing new loans</div>
+                    </div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.canDisburse}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          permissions: { ...formData.permissions, canDisburse: e.target.checked }
+                        })}
+                        style={{ accentColor: '#059669' }}
+                      />
+                      <span>Active</span>
+                    </label>
+                  </div>
 
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.82rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.permissions.canReviewApps}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        permissions: { ...formData.permissions, canReviewApps: e.target.checked }
-                      })}
-                    />
-                    <span>Allow Credit Review & Approving Loan Applications</span>
-                  </label>
+                  {/* Module 3: Credit Appraisal & Applications */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.45rem 0.6rem', background: '#FFF', borderRadius: '6px', border: '1px solid #E2E8F0' }}>
+                    <div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0F172A' }}>Loan Applications & KYC Underwriting</div>
+                      <div style={{ fontSize: '0.7rem', color: '#64748B' }}>Review documents & approve credit</div>
+                    </div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.canReviewApps}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          permissions: { ...formData.permissions, canReviewApps: e.target.checked }
+                        })}
+                        style={{ accentColor: '#059669' }}
+                      />
+                      <span>Active</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 

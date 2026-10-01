@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, 
   UserPlus, 
@@ -23,87 +23,56 @@ import {
   Receipt, 
   AlertTriangle, 
   CreditCard, 
-  FileText
+  FileText,
+  Save,
+  RotateCcw,
+  Shield,
+  Layers,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const AVAILABLE_MODULES = [
-  { id: 'dashboard', label: 'Dashboard Overview', icon: LayoutDashboard, desc: 'Financial KPI summary, capital charts & metrics' },
-  { id: 'dailyRoute', label: "Today's Route (Due Sheet)", icon: CalendarCheck, desc: 'Daily dues, who pays today, 1-click collection & skip' },
-  { id: 'customer360', label: 'Borrowers 360 & KYC', icon: Users, desc: 'Customer dossier, loan passbook, Aadhaar/PAN documents' },
-  { id: 'staff', label: 'Staff & Team Manager', icon: UserCheck, desc: 'Field agent rosters, recovery targets & route areas' },
-  { id: 'onboarding', label: '+ Onboard Borrower', icon: UserPlus, desc: 'Full KYC intake wizard for new borrowers' },
-  { id: 'applications', label: 'Loan Applications', icon: FileCheck, desc: 'Underwriting workflow, appraisal & loan approval' },
-  { id: 'payments', label: 'Payments Ledger', icon: Receipt, desc: 'Receipt logging, interest/principal split & ledger' },
-  { id: 'overdue', label: 'Overdue Collections', icon: AlertTriangle, desc: 'Aging buckets, call notes & recovery promises' },
-  { id: 'products', label: 'Finance Products', icon: CreditCard, desc: 'Daily/Monthly byaj rules & interest rates' },
-  { id: 'rbac', label: 'RBAC Matrix', icon: Sliders, desc: 'Static security policies & role matrix' },
-  { id: 'audit', label: 'Audit Trail', icon: FileText, desc: 'Tamper-evident logs of every transaction & change' },
-  { id: 'userManagement', label: 'User Management (Admin)', icon: ShieldCheck, desc: 'Admin control over users & module permissions' }
+  { id: 'dashboard', label: 'Dashboard Overview', desc: 'Financial KPI summary, capital charts & portfolio analytics', icon: LayoutDashboard },
+  { id: 'dailyRoute', label: "Today's Route (Due Sheet)", desc: 'Daily dues, who pays today, 1-click collection & skip', icon: CalendarCheck },
+  { id: 'customer360', label: 'Borrowers 360 & KYC', desc: 'Borrower dossier, loan passbook, Aadhaar/PAN documents', icon: Users },
+  { id: 'staff', label: 'Staff & Team Manager', desc: 'Field agent rosters, recovery targets & route territory assignments', icon: UserCheck },
+  { id: 'onboarding', label: '+ Onboard Borrower', desc: 'Full KYC intake wizard for new borrower registrations', icon: UserPlus },
+  { id: 'applications', label: 'Loan Applications', desc: 'Credit underwriting workflow, appraisal & loan approval', icon: FileCheck },
+  { id: 'payments', label: 'Payments Ledger', desc: 'Receipt logging, interest/principal split & ledger transactions', icon: Receipt },
+  { id: 'overdue', label: 'Overdue Collections', desc: 'Aging buckets, call notes & recovery promises to pay', icon: AlertTriangle },
+  { id: 'products', label: 'Finance Products', desc: 'Daily/Monthly byaj rules & interest rate configurations', icon: CreditCard },
+  { id: 'userManagement', label: 'Admin Panel & Access', desc: 'User management, module permissions and access control', icon: ShieldCheck },
+  { id: 'rbac', label: 'RBAC Matrix', desc: 'Static security policies & role matrix overview', icon: Sliders },
+  { id: 'audit', label: 'Audit Trail', desc: 'Tamper-evident logs of every transaction & system change', icon: FileText }
 ];
 
-export const ROLE_PRESETS = {
-  'Admin': {
-    modules: AVAILABLE_MODULES.map(m => m.id),
-    permissions: {
-      canDisburseLoan: true,
-      canCollectPayment: true,
-      canApproveLoan: true,
-      canDeleteRecords: true,
-      canExportReports: true
+// Helper to construct full modulePermissions object for a user
+export function buildUserModulePermissions(user) {
+  const allowed = Array.isArray(user?.allowedModules) ? user.allowedModules : ['dashboard'];
+  const base = {};
+
+  AVAILABLE_MODULES.forEach(m => {
+    const isAllowed = allowed.includes(m.id);
+    const existing = user?.modulePermissions?.[m.id];
+    if (existing) {
+      base[m.id] = {
+        view: existing.view ?? isAllowed,
+        modify: existing.modify ?? (isAllowed && user.role === 'Admin'),
+        delete: existing.delete ?? (isAllowed && user.role === 'Admin')
+      };
+    } else {
+      base[m.id] = {
+        view: isAllowed,
+        modify: isAllowed && (user.role === 'Admin' || user.role === 'Branch Manager'),
+        delete: isAllowed && user.role === 'Admin'
+      };
     }
-  },
-  'Branch Manager': {
-    modules: ['dashboard', 'dailyRoute', 'customer360', 'staff', 'onboarding', 'applications', 'payments', 'overdue', 'products', 'audit'],
-    permissions: {
-      canDisburseLoan: true,
-      canCollectPayment: true,
-      canApproveLoan: true,
-      canDeleteRecords: false,
-      canExportReports: true
-    }
-  },
-  'Field Collection Agent': {
-    modules: ['dashboard', 'dailyRoute', 'payments', 'overdue'],
-    permissions: {
-      canDisburseLoan: false,
-      canCollectPayment: true,
-      canApproveLoan: false,
-      canDeleteRecords: false,
-      canExportReports: false
-    }
-  },
-  'Cashier': {
-    modules: ['dashboard', 'dailyRoute', 'payments'],
-    permissions: {
-      canDisburseLoan: false,
-      canCollectPayment: true,
-      canApproveLoan: false,
-      canDeleteRecords: false,
-      canExportReports: false
-    }
-  },
-  'Credit Underwriter': {
-    modules: ['dashboard', 'customer360', 'onboarding', 'applications'],
-    permissions: {
-      canDisburseLoan: true,
-      canCollectPayment: false,
-      canApproveLoan: true,
-      canDeleteRecords: false,
-      canExportReports: true
-    }
-  },
-  'Auditor / Viewer': {
-    modules: ['dashboard', 'customer360', 'payments', 'audit'],
-    permissions: {
-      canDisburseLoan: false,
-      canCollectPayment: false,
-      canApproveLoan: false,
-      canDeleteRecords: false,
-      canExportReports: true
-    }
-  }
-};
+  });
+
+  return base;
+}
 
 export default function UserManagementView({
   appUsers = [],
@@ -112,424 +81,622 @@ export default function UserManagementView({
   onSaveUser,
   onDeleteUser
 }) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState('ALL');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  // Top Active Tab: 'permissions' (the exact table view requested) or 'users' or 'modules'
+  const [activeTab, setActiveTab] = useState('permissions');
 
-  // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Selected User for Permissions Matrix
+  const [selectedUserId, setSelectedUserId] = useState(() => appUsers[0]?.id || 'USR-001');
+  const selectedUser = appUsers.find(u => u.id === selectedUserId) || appUsers[0] || {};
+
+  // Local state for the selected user's module permissions table
+  const [localPermissions, setLocalPermissions] = useState(() => buildUserModulePermissions(selectedUser));
+  const [moduleSearch, setModuleSearch] = useState('');
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
+
+  // Synchronize local permissions when selected user changes
+  useEffect(() => {
+    if (selectedUser) {
+      setLocalPermissions(buildUserModulePermissions(selectedUser));
+      setSaveSuccessMsg('');
+    }
+  }, [selectedUserId, appUsers]);
+
+  // Modal State for Adding/Editing User Profile
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [editingUserId, setEditingUserId] = useState(null);
-
-  // Form State
-  const [formData, setFormData] = useState({
+  const [userFormData, setUserFormData] = useState({
     name: '',
     email: '',
     phone: '',
     role: 'Field Collection Agent',
     passcode: '1234',
-    status: 'Active',
-    allowedModules: ['dashboard', 'dailyRoute', 'payments', 'overdue'],
-    permissions: {
-      canDisburseLoan: false,
-      canCollectPayment: true,
-      canApproveLoan: false,
-      canDeleteRecords: false,
-      canExportReports: false
-    }
+    status: 'Active'
   });
 
-  // Open Create Modal
-  const handleOpenCreate = () => {
-    setEditingUserId(null);
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      role: 'Field Collection Agent',
-      passcode: '1234',
-      status: 'Active',
-      allowedModules: ['dashboard', 'dailyRoute', 'payments', 'overdue'],
-      permissions: {
-        canDisburseLoan: false,
-        canCollectPayment: true,
-        canApproveLoan: false,
-        canDeleteRecords: false,
-        canExportReports: false
-      }
-    });
-    setIsModalOpen(true);
-  };
+  // Toggle single cell
+  const handleToggleCell = (moduleId, type) => {
+    setLocalPermissions(prev => {
+      const current = prev[moduleId] || { view: false, modify: false, delete: false };
+      const nextVal = !current[type];
 
-  // Open Edit Modal
-  const handleOpenEdit = (user) => {
-    setEditingUserId(user.id);
-    setFormData({
-      name: user.name,
-      email: user.email,
-      phone: user.phone || '',
-      role: user.role || 'Custom',
-      passcode: user.passcode || '1234',
-      status: user.status || 'Active',
-      allowedModules: Array.isArray(user.allowedModules) ? user.allowedModules : ['dashboard'],
-      permissions: {
-        canDisburseLoan: !!user.permissions?.canDisburseLoan,
-        canCollectPayment: !!user.permissions?.canCollectPayment,
-        canApproveLoan: !!user.permissions?.canApproveLoan,
-        canDeleteRecords: !!user.permissions?.canDeleteRecords,
-        canExportReports: !!user.permissions?.canExportReports
+      // If modify or delete is turned on, auto-enable view
+      let nextView = current.view;
+      if ((type === 'modify' || type === 'delete') && nextVal) {
+        nextView = true;
       }
-    });
-    setIsModalOpen(true);
-  };
+      // If view is turned off, auto-disable modify and delete
+      let nextModify = current.modify;
+      let nextDelete = current.delete;
+      if (type === 'view' && !nextVal) {
+        nextModify = false;
+        nextDelete = false;
+      }
 
-  // Apply Role Preset
-  const handleRoleChange = (role) => {
-    const preset = ROLE_PRESETS[role];
-    if (preset) {
-      setFormData(prev => ({
+      return {
         ...prev,
-        role,
-        allowedModules: [...preset.modules],
-        permissions: { ...preset.permissions }
-      }));
-    } else {
-      setFormData(prev => ({ ...prev, role }));
-    }
-  };
-
-  // Toggle Module
-  const handleToggleModule = (moduleId) => {
-    setFormData(prev => {
-      const exists = prev.allowedModules.includes(moduleId);
-      const updated = exists 
-        ? prev.allowedModules.filter(m => m !== moduleId)
-        : [...prev.allowedModules, moduleId];
-      return { ...prev, allowedModules: updated };
+        [moduleId]: {
+          view: type === 'view' ? nextVal : nextView,
+          modify: type === 'modify' ? nextVal : nextModify,
+          delete: type === 'delete' ? nextVal : nextDelete
+        }
+      };
     });
   };
 
-  // Toggle Action Permission
-  const handleTogglePermission = (key) => {
-    setFormData(prev => ({
+  // Quick Set: Full Access for a module
+  const handleQuickSetFull = (moduleId) => {
+    setLocalPermissions(prev => ({
       ...prev,
+      [moduleId]: { view: true, modify: true, delete: true }
+    }));
+  };
+
+  // Quick Set: None (revoke) for a module
+  const handleQuickSetNone = (moduleId) => {
+    setLocalPermissions(prev => ({
+      ...prev,
+      [moduleId]: { view: false, modify: false, delete: false }
+    }));
+  };
+
+  // Grant All Modules
+  const handleGrantAll = () => {
+    const updated = {};
+    AVAILABLE_MODULES.forEach(m => {
+      updated[m.id] = { view: true, modify: true, delete: selectedUser.role === 'Admin' };
+    });
+    setLocalPermissions(updated);
+  };
+
+  // Revoke All Modules (keeps dashboard view only)
+  const handleRevokeAll = () => {
+    const updated = {};
+    AVAILABLE_MODULES.forEach(m => {
+      updated[m.id] = { view: m.id === 'dashboard', modify: false, delete: false };
+    });
+    setLocalPermissions(updated);
+  };
+
+  // Save Permissions to Supabase
+  const handleSavePermissions = () => {
+    const allowedModules = Object.keys(localPermissions).filter(m => localPermissions[m].view);
+
+    const updatedUser = {
+      ...selectedUser,
+      allowedModules: allowedModules.length > 0 ? allowedModules : ['dashboard'],
+      modulePermissions: localPermissions,
       permissions: {
-        ...prev.permissions,
-        [key]: !prev.permissions[key]
+        canDisburseLoan: Boolean(localPermissions.onboarding?.modify || localPermissions.applications?.modify),
+        canCollectPayment: Boolean(localPermissions.dailyRoute?.modify || localPermissions.payments?.modify),
+        canApproveLoan: Boolean(localPermissions.applications?.modify),
+        canDeleteRecords: Boolean(localPermissions.payments?.delete || localPermissions.customer360?.delete),
+        canExportReports: Boolean(localPermissions.dashboard?.view)
       }
-    }));
+    };
+
+    onSaveUser(updatedUser);
+    confetti({ particleCount: 45, spread: 60, origin: { y: 0.5 } });
+    setSaveSuccessMsg(`Permissions saved successfully for ${selectedUser.name}!`);
+    setTimeout(() => setSaveSuccessMsg(''), 4000);
   };
 
-  // Select / Deselect All Modules
-  const handleSelectAllModules = () => {
-    setFormData(prev => ({
-      ...prev,
-      allowedModules: AVAILABLE_MODULES.map(m => m.id)
-    }));
-  };
-
-  const handleClearAllModules = () => {
-    setFormData(prev => ({
-      ...prev,
-      allowedModules: ['dashboard']
-    }));
-  };
-
-  // Submit Save
-  const handleFormSubmit = (e) => {
+  // Handle Save User Modal
+  const handleSaveUserModalSubmit = (e) => {
     e.preventDefault();
-    if (!formData.name.trim() || !formData.email.trim()) {
+    if (!userFormData.name.trim() || !userFormData.email.trim()) {
       alert('Please fill out Name and Email.');
       return;
     }
 
     const payload = {
       id: editingUserId || `USR-${Date.now().toString().slice(-4)}`,
-      name: formData.name.trim(),
-      email: formData.email.trim().toLowerCase(),
-      phone: formData.phone.trim(),
-      role: formData.role,
-      passcode: formData.passcode.trim() || '1234',
-      status: formData.status,
-      allowedModules: formData.allowedModules.length > 0 ? formData.allowedModules : ['dashboard'],
-      permissions: formData.permissions,
+      name: userFormData.name.trim(),
+      email: userFormData.email.trim().toLowerCase(),
+      phone: userFormData.phone.trim(),
+      role: userFormData.role,
+      passcode: userFormData.passcode.trim() || '1234',
+      status: userFormData.status,
+      allowedModules: editingUserId ? (selectedUser.allowedModules || ['dashboard']) : ['dashboard', 'dailyRoute', 'payments'],
+      modulePermissions: editingUserId ? (selectedUser.modulePermissions || {}) : {},
+      permissions: {
+        canDisburseLoan: userFormData.role === 'Admin',
+        canCollectPayment: true,
+        canApproveLoan: userFormData.role === 'Admin' || userFormData.role === 'Credit Underwriter',
+        canDeleteRecords: userFormData.role === 'Admin',
+        canExportReports: userFormData.role === 'Admin'
+      },
       createdAt: new Date().toISOString()
     };
 
     onSaveUser(payload);
-    setIsModalOpen(false);
-    confetti({ particleCount: 35, spread: 50, origin: { y: 0.6 } });
+    setIsUserModalOpen(false);
+    setSelectedUserId(payload.id);
   };
 
-  // Toggle User Status
-  const handleToggleUserStatus = (user) => {
-    const updatedStatus = user.status === 'Active' ? 'Suspended' : 'Active';
-    onSaveUser({
-      ...user,
-      status: updatedStatus
-    });
-  };
+  // Calculated Stats for Table Summary Bar
+  const modulesGrantedCount = Object.values(localPermissions).filter(p => p.view).length;
+  const viewCount = Object.values(localPermissions).filter(p => p.view).length;
+  const modCount = Object.values(localPermissions).filter(p => p.modify).length;
+  const delCount = Object.values(localPermissions).filter(p => p.delete).length;
 
-  // Filter Users
-  const filteredUsers = appUsers.filter(u => {
-    if (roleFilter !== 'ALL' && u.role !== roleFilter) return false;
-    if (statusFilter !== 'ALL' && u.status !== statusFilter) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchName = u.name?.toLowerCase().includes(q);
-      const matchEmail = u.email?.toLowerCase().includes(q);
-      const matchPhone = u.phone?.toLowerCase().includes(q);
-      const matchRole = u.role?.toLowerCase().includes(q);
-      if (!matchName && !matchEmail && !matchPhone && !matchRole) return false;
-    }
-    return true;
+  // Filter modules by search
+  const filteredModules = AVAILABLE_MODULES.filter(m => {
+    if (!moduleSearch.trim()) return true;
+    const q = moduleSearch.toLowerCase();
+    return m.label.toLowerCase().includes(q) || m.desc.toLowerCase().includes(q);
   });
-
-  const totalUsers = appUsers.length;
-  const activeCount = appUsers.filter(u => u.status === 'Active').length;
-  const suspendedCount = appUsers.filter(u => u.status === 'Suspended').length;
-  const adminCount = appUsers.filter(u => u.role === 'Admin').length;
 
   return (
     <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.8rem 2rem' }}>
       
-      {/* Page Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.6rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+      {/* Top Breadcrumb & Header Title (Matching Image 2) */}
+      <div style={{ marginBottom: '1.4rem' }}>
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.35rem',
+          fontSize: '0.72rem',
+          fontWeight: 800,
+          color: '#059669',
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase',
+          marginBottom: '0.25rem'
+        }}>
+          <Shield size={13} /> ADMIN PANEL
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <h1 style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', margin: 0 }}>
+              User management & access control
+            </h1>
+            <p style={{ fontSize: '0.84rem', color: '#64748B', margin: '0.25rem 0 0 0' }}>
+              Manage users, module permissions, and employee mappings.
+            </p>
+          </div>
+
+          <button
+            onClick={() => {
+              setEditingUserId(null);
+              setUserFormData({
+                name: '',
+                email: '',
+                phone: '',
+                role: 'Field Collection Agent',
+                passcode: '1234',
+                status: 'Active'
+              });
+              setIsUserModalOpen(true);
+            }}
+            className="btn-primary"
+            style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FFF',
-              boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)'
-            }}>
-              <ShieldCheck size={20} />
-            </div>
-            <div>
-              <h1 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', margin: 0 }}>
-                User Management & Access Control
-              </h1>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.15rem 0 0 0' }}>
-                Admin console to add system users, set login PINs, and grant granular module access permissions
-              </p>
-            </div>
-          </div>
+              gap: '0.45rem',
+              padding: '0.6rem 1.15rem',
+              borderRadius: '8px',
+              fontSize: '0.84rem',
+              fontWeight: 700
+            }}
+          >
+            <UserPlus size={15} /> + Add New User
+          </button>
         </div>
+      </div>
 
-        {/* Add User Action Button */}
+      {/* Navigation Sub-Tabs (Users, Permissions, Modules - Matching Image 2) */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '2rem',
+        borderBottom: '1px solid #E2E8F0',
+        marginBottom: '1.6rem'
+      }}>
         <button
-          onClick={handleOpenCreate}
-          className="btn-primary"
+          onClick={() => setActiveTab('permissions')}
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.65rem 1.25rem',
-            borderRadius: '10px',
-            fontSize: '0.85rem',
-            fontWeight: 700,
-            boxShadow: '0 4px 14px rgba(79, 70, 229, 0.25)'
+            gap: '0.45rem',
+            padding: '0.75rem 0.2rem',
+            background: 'transparent',
+            border: 'none',
+            borderBottom: activeTab === 'permissions' ? '2.5px solid #059669' : '2.5px solid transparent',
+            color: activeTab === 'permissions' ? '#059669' : '#64748B',
+            fontSize: '0.86rem',
+            fontWeight: activeTab === 'permissions' ? 700 : 500,
+            cursor: 'pointer'
           }}
         >
-          <UserPlus size={16} /> + Add New User
+          <CheckCircle2 size={16} /> Permissions
+        </button>
+
+        <button
+          onClick={() => setActiveTab('users')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            padding: '0.75rem 0.2rem',
+            background: 'transparent',
+            border: 'none',
+            borderBottom: activeTab === 'users' ? '2.5px solid #059669' : '2.5px solid transparent',
+            color: activeTab === 'users' ? '#059669' : '#64748B',
+            fontSize: '0.86rem',
+            fontWeight: activeTab === 'users' ? 700 : 500,
+            cursor: 'pointer'
+          }}
+        >
+          <Users size={16} /> Users <span style={{ fontSize: '0.74rem', background: '#F1F5F9', color: '#475569', padding: '0.1rem 0.45rem', borderRadius: '10px' }}>{appUsers.length}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('modules')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            padding: '0.75rem 0.2rem',
+            background: 'transparent',
+            border: 'none',
+            borderBottom: activeTab === 'modules' ? '2.5px solid #059669' : '2.5px solid transparent',
+            color: activeTab === 'modules' ? '#059669' : '#64748B',
+            fontSize: '0.86rem',
+            fontWeight: activeTab === 'modules' ? 700 : 500,
+            cursor: 'pointer'
+          }}
+        >
+          <Layers size={16} /> Modules <span style={{ fontSize: '0.74rem', background: '#F1F5F9', color: '#475569', padding: '0.1rem 0.45rem', borderRadius: '10px' }}>{AVAILABLE_MODULES.length}</span>
         </button>
       </div>
 
-      {/* Current Active User Simulation Bar */}
-      <div style={{
-        background: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
-        border: '1px solid #C7D2FE',
-        borderRadius: '14px',
-        padding: '1rem 1.4rem',
-        marginBottom: '1.6rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '1rem'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+      {/* ========================================================= */}
+      {/* TAB 1: PERMISSIONS MATRIX (Exact Replica of Image 2) */}
+      {/* ========================================================= */}
+      {activeTab === 'permissions' && (
+        <div>
+          {/* Action & Control Bar */}
           <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '50%',
-            background: 'var(--accent-indigo)',
-            color: '#FFF',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 800,
-            fontSize: '1.05rem',
-            boxShadow: '0 3px 10px rgba(79, 70, 229, 0.35)'
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            marginBottom: '1rem'
           }}>
-            {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'A'}
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#4338CA', fontWeight: 700 }}>
-                Currently Active Session
-              </span>
-              <span style={{
-                fontSize: '0.7rem',
-                background: '#4338CA',
-                color: '#FFF',
-                padding: '0.1rem 0.5rem',
-                borderRadius: '10px',
-                fontWeight: 700
-              }}>
-                {currentUser?.role || 'Admin'}
-              </span>
+            {/* Left Controls: Select User & Search Modules */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', flex: 1 }}>
+              
+              {/* Select User Dropdown */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569' }}>Select user:</span>
+                <select
+                  value={selectedUserId}
+                  onChange={(e) => setSelectedUserId(e.target.value)}
+                  style={{
+                    padding: '0.48rem 0.85rem',
+                    fontSize: '0.84rem',
+                    fontWeight: 700,
+                    borderRadius: '8px',
+                    border: '1.5px solid #059669',
+                    background: '#FFF',
+                    color: '#0F172A',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {appUsers.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.role.toLowerCase()})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Search Modules Input */}
+              <div style={{ position: 'relative', width: '220px' }}>
+                <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                <input
+                  type="text"
+                  placeholder="Search modules..."
+                  value={moduleSearch}
+                  onChange={(e) => setModuleSearch(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.45rem 0.75rem 0.45rem 2rem',
+                    fontSize: '0.82rem',
+                    borderRadius: '8px',
+                    border: '1px solid #CBD5E1',
+                    background: '#FFF',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {/* Modules Granted Indicator & Bulk Set */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <span style={{
+                  fontSize: '0.76rem',
+                  fontWeight: 700,
+                  color: '#475569',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem'
+                }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#059669' }} />
+                  {modulesGrantedCount}/{AVAILABLE_MODULES.length} Modules Granted
+                </span>
+
+                <button
+                  type="button"
+                  onClick={handleGrantAll}
+                  style={{
+                    padding: '0.3rem 0.65rem',
+                    fontSize: '0.74rem',
+                    fontWeight: 600,
+                    borderRadius: '6px',
+                    border: '1px solid #CBD5E1',
+                    background: '#F8FAFC',
+                    color: '#334155',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Grant all
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleRevokeAll}
+                  style={{
+                    padding: '0.3rem 0.65rem',
+                    fontSize: '0.74rem',
+                    fontWeight: 600,
+                    borderRadius: '6px',
+                    border: '1px solid #CBD5E1',
+                    background: '#F8FAFC',
+                    color: '#334155',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Revoke all
+                </button>
+              </div>
             </div>
-            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#1E1B4B' }}>
-              {currentUser?.name || 'Admin Master'} <span style={{ fontSize: '0.8rem', fontWeight: 500, color: '#4B5563' }}>({currentUser?.email || 'admin@dhanshri.com'})</span>
+
+            {/* Right: Save Permissions Button (Teal / Emerald) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+              {saveSuccessMsg && (
+                <span style={{ fontSize: '0.78rem', color: '#059669', fontWeight: 700 }}>
+                  ✓ {saveSuccessMsg}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={handleSavePermissions}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  padding: '0.55rem 1.3rem',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: '#059669',
+                  color: '#FFF',
+                  fontSize: '0.86rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)'
+                }}
+              >
+                <Check size={16} /> Save permissions
+              </button>
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#4B5563', marginTop: '0.1rem' }}>
-              Allowed Modules: <strong>{(currentUser?.allowedModules || []).length} / {AVAILABLE_MODULES.length}</strong> active. The top navigation bar only renders what this user is authorized to see.
-            </div>
-          </div>
-        </div>
-
-        {/* Quick User Switcher Dropdown */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>Simulate User:</span>
-          <select
-            value={currentUser?.id || ''}
-            onChange={(e) => {
-              const selected = appUsers.find(u => u.id === e.target.value);
-              if (selected) onSwitchUser(selected);
-            }}
-            className="form-input"
-            style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem', fontWeight: 600, background: '#FFF', borderColor: '#A5B4FC' }}
-          >
-            {appUsers.map(u => (
-              <option key={u.id} value={u.id}>
-                {u.name} — {u.role} ({u.status})
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* KPI Stats Bar */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-        gap: '1.2rem',
-        marginBottom: '1.8rem'
-      }}>
-        <div className="card" style={{ padding: '1.2rem', background: '#FFF' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Total Registered Users</span>
-            <Users size={18} color="var(--accent-indigo)" />
-          </div>
-          <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0F172A' }}>{totalUsers}</div>
-          <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>Configured system accounts</span>
-        </div>
-
-        <div className="card" style={{ padding: '1.2rem', background: '#FFF' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Active Logins</span>
-            <CheckCircle2 size={18} color="#059669" />
-          </div>
-          <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#059669' }}>{activeCount}</div>
-          <span style={{ fontSize: '0.72rem', color: '#059669' }}>Enabled for operational access</span>
-        </div>
-
-        <div className="card" style={{ padding: '1.2rem', background: '#FFF' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Suspended Accounts</span>
-            <XCircle size={18} color="#DC2626" />
-          </div>
-          <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#DC2626' }}>{suspendedCount}</div>
-          <span style={{ fontSize: '0.72rem', color: '#DC2626' }}>Temporarily locked from login</span>
-        </div>
-
-        <div className="card" style={{ padding: '1.2rem', background: '#FFF' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Master Admins</span>
-            <ShieldCheck size={18} color="#7C3AED" />
-          </div>
-          <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#7C3AED' }}>{adminCount}</div>
-          <span style={{ fontSize: '0.72rem', color: '#7C3AED' }}>Full root access controllers</span>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div style={{
-        background: '#FFF',
-        padding: '1rem 1.4rem',
-        borderRadius: '12px',
-        border: '1px solid var(--border-subtle)',
-        marginBottom: '1.5rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '0.85rem'
-      }}>
-        {/* Search */}
-        <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
-          <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
-          <input
-            type="text"
-            placeholder="Search by name, email, phone or role..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="form-input"
-            style={{ paddingLeft: '2.2rem', fontSize: '0.82rem' }}
-          />
-        </div>
-
-        {/* Filters */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>Role:</span>
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="form-input"
-              style={{ fontSize: '0.78rem', padding: '0.35rem 0.65rem' }}
-            >
-              <option value="ALL">All Roles</option>
-              <option value="Admin">Admin</option>
-              <option value="Branch Manager">Branch Manager</option>
-              <option value="Field Collection Agent">Field Collection Agent</option>
-              <option value="Cashier">Cashier</option>
-              <option value="Credit Underwriter">Credit Underwriter</option>
-              <option value="Auditor / Viewer">Auditor / Viewer</option>
-            </select>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>Status:</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="form-input"
-              style={{ fontSize: '0.78rem', padding: '0.35rem 0.65rem' }}
-            >
-              <option value="ALL">All Status</option>
-              <option value="Active">Active</option>
-              <option value="Suspended">Suspended</option>
-            </select>
+          {/* Effective Access Summary Banner (Matching Image 2) */}
+          <div style={{
+            background: '#F8FAFC',
+            border: '1px solid #E2E8F0',
+            borderRadius: '8px',
+            padding: '0.65rem 1rem',
+            marginBottom: '1.2rem',
+            fontSize: '0.76rem',
+            color: '#475569',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.6rem',
+            flexWrap: 'wrap'
+          }}>
+            <ShieldCheck size={15} color="#059669" />
+            <strong style={{ color: '#0F172A' }}>Effective Access Summary:</strong>
+            <span>Platform role: <strong>{selectedUser.role?.toLowerCase() || 'staff'}</strong></span>
+            <span>|</span>
+            <span>Account Status: <strong>{selectedUser.status || 'Active'}</strong></span>
+            <span>|</span>
+            <span>Assigned Officer Scope: <code style={{ background: '#E2E8F0', padding: '0.1rem 0.35rem', borderRadius: '4px', color: '#0F172A' }}>{selectedUser.id}</code></span>
+            <span>|</span>
+            <span>Modules (view/modify/delete): <strong style={{ color: '#059669' }}>{viewCount}</strong> / <strong style={{ color: '#2563EB' }}>{modCount}</strong> / <strong style={{ color: '#DC2626' }}>{delCount}</strong></span>
+          </div>
+
+          {/* Granular Permissions Table (Exact Columns: MODULE, VIEW, MODIFY, DELETE, QUICK SET) */}
+          <div style={{
+            background: '#FFF',
+            border: '1px solid #E2E8F0',
+            borderRadius: '12px',
+            overflow: 'hidden',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.02)'
+          }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#64748B', fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  <th style={{ padding: '0.85rem 1.4rem', width: '45%' }}>MODULE</th>
+                  <th style={{ padding: '0.85rem 1rem', textAlign: 'center', width: '12%' }}>VIEW</th>
+                  <th style={{ padding: '0.85rem 1rem', textAlign: 'center', width: '12%' }}>MODIFY</th>
+                  <th style={{ padding: '0.85rem 1rem', textAlign: 'center', width: '12%' }}>DELETE</th>
+                  <th style={{ padding: '0.85rem 1.4rem', textAlign: 'center', width: '19%' }}>QUICK SET</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredModules.map(module => {
+                  const perm = localPermissions[module.id] || { view: false, modify: false, delete: false };
+                  const Icon = module.icon;
+
+                  return (
+                    <tr 
+                      key={module.id} 
+                      style={{
+                        borderBottom: '1px solid #F1F5F9',
+                        background: perm.view ? '#FFF' : '#FCFDFD',
+                        transition: 'background 0.15s ease'
+                      }}
+                    >
+                      {/* Module Info */}
+                      <td style={{ padding: '0.9rem 1.4rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                          <div style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '8px',
+                            background: perm.view ? '#ECFDF5' : '#F1F5F9',
+                            color: perm.view ? '#059669' : '#94A3B8',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
+                          }}>
+                            <Icon size={18} />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.88rem', fontWeight: 700, color: perm.view ? '#0F172A' : '#64748B' }}>
+                              {module.label}
+                            </div>
+                            <div style={{ fontSize: '0.74rem', color: '#94A3B8', marginTop: '0.1rem' }}>
+                              {module.desc}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* VIEW Checkbox */}
+                      <td style={{ padding: '0.9rem 1rem', textAlign: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={perm.view}
+                          onChange={() => handleToggleCell(module.id, 'view')}
+                          style={{
+                            width: '18px',
+                            height: '18px',
+                            cursor: 'pointer',
+                            accentColor: '#059669'
+                          }}
+                          title={`Allow ${selectedUser.name} to view/see ${module.label}`}
+                        />
+                      </td>
+
+                      {/* MODIFY Checkbox */}
+                      <td style={{ padding: '0.9rem 1rem', textAlign: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={perm.modify}
+                          onChange={() => handleToggleCell(module.id, 'modify')}
+                          style={{
+                            width: '18px',
+                            height: '18px',
+                            cursor: 'pointer',
+                            accentColor: '#2563EB'
+                          }}
+                          title={`Allow ${selectedUser.name} to create/modify records in ${module.label}`}
+                        />
+                      </td>
+
+                      {/* DELETE Checkbox */}
+                      <td style={{ padding: '0.9rem 1rem', textAlign: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={perm.delete}
+                          onChange={() => handleToggleCell(module.id, 'delete')}
+                          style={{
+                            width: '18px',
+                            height: '18px',
+                            cursor: 'pointer',
+                            accentColor: '#DC2626'
+                          }}
+                          title={`Allow ${selectedUser.name} to delete/cancel records in ${module.label}`}
+                        />
+                      </td>
+
+                      {/* QUICK SET Buttons (Full | None) */}
+                      <td style={{ padding: '0.9rem 1.4rem', textAlign: 'center' }}>
+                        <div style={{ display: 'inline-flex', gap: '0.4rem' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleQuickSetFull(module.id)}
+                            style={{
+                              padding: '0.25rem 0.7rem',
+                              fontSize: '0.74rem',
+                              fontWeight: 600,
+                              borderRadius: '6px',
+                              border: '1px solid #CBD5E1',
+                              background: '#FFF',
+                              color: '#334155',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Full
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleQuickSetNone(module.id)}
+                            style={{
+                              padding: '0.25rem 0.7rem',
+                              fontSize: '0.74rem',
+                              fontWeight: 600,
+                              borderRadius: '6px',
+                              border: '1px solid #CBD5E1',
+                              background: '#FFF',
+                              color: '#334155',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            None
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Users Roster Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.4rem' }}>
-        {filteredUsers.length === 0 ? (
-          <div style={{ gridColumn: '1 / -1', padding: '3.5rem', textAlign: 'center', background: '#FFF', borderRadius: '14px', border: '1px solid var(--border-subtle)' }}>
-            <ShieldAlert size={42} color="var(--text-dim)" style={{ margin: '0 auto 0.8rem' }} />
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#334155' }}>No Users Found</h3>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Try adjusting your search query or role filter.</p>
-          </div>
-        ) : (
-          filteredUsers.map(user => {
+      {/* ========================================================= */}
+      {/* TAB 2: USERS ROSTER */}
+      {/* ========================================================= */}
+      {activeTab === 'users' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.4rem' }}>
+          {appUsers.map(user => {
             const isCurrent = currentUser?.id === user.id;
             const allowedCount = (user.allowedModules || []).length;
             const isSuspended = user.status === 'Suspended';
@@ -537,45 +704,25 @@ export default function UserManagementView({
             return (
               <div 
                 key={user.id} 
-                className="card" 
                 style={{
                   background: '#FFF',
                   padding: '1.4rem',
                   borderRadius: '14px',
-                  border: isCurrent ? '2px solid var(--accent-indigo)' : '1px solid var(--border-subtle)',
-                  boxShadow: isCurrent ? '0 6px 20px rgba(79, 70, 229, 0.15)' : '0 2px 8px rgba(0,0,0,0.03)',
+                  border: isCurrent ? '2px solid #059669' : '1px solid #E2E8F0',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  position: 'relative'
+                  justifyContent: 'space-between'
                 }}
               >
-                {isCurrent && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-10px',
-                    right: '18px',
-                    background: 'var(--accent-indigo)',
-                    color: '#FFF',
-                    fontSize: '0.68rem',
-                    fontWeight: 800,
-                    padding: '0.15rem 0.6rem',
-                    borderRadius: '12px',
-                    boxShadow: '0 2px 6px rgba(79, 70, 229, 0.4)'
-                  }}>
-                    ACTIVE LOGGED IN
-                  </div>
-                )}
-
                 <div>
-                  {/* Card Header: Avatar & Info */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.8rem', marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                       <div style={{
-                        width: '46px',
-                        height: '46px',
+                        width: '44px',
+                        height: '44px',
                         borderRadius: '12px',
-                        background: user.role === 'Admin' ? 'linear-gradient(135deg, #4F46E5, #7C3AED)' : '#F1F5F9',
+                        background: user.role === 'Admin' ? 'linear-gradient(135deg, #059669, #10B981)' : '#F1F5F9',
                         color: user.role === 'Admin' ? '#FFF' : '#334155',
                         display: 'flex',
                         alignItems: 'center',
@@ -590,232 +737,109 @@ export default function UserManagementView({
                           {user.name}
                         </h3>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.2rem' }}>
-                          <span style={{
-                            fontSize: '0.72rem',
-                            fontWeight: 700,
-                            padding: '0.1rem 0.5rem',
-                            borderRadius: '6px',
-                            background: user.role === 'Admin' ? '#EEF2FF' : '#F8FAFC',
-                            color: user.role === 'Admin' ? '#4F46E5' : '#475569',
-                            border: `1px solid ${user.role === 'Admin' ? '#C7D2FE' : '#E2E8F0'}`
-                          }}>
+                          <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '0.1rem 0.5rem', borderRadius: '6px', background: '#F1F5F9', color: '#475569' }}>
                             {user.role}
                           </span>
                           <span style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.25rem',
                             fontSize: '0.7rem',
                             fontWeight: 700,
                             padding: '0.1rem 0.45rem',
                             borderRadius: '10px',
                             background: isSuspended ? '#FEF2F2' : '#ECFDF5',
-                            color: isSuspended ? '#DC2626' : '#059669',
-                            border: `1px solid ${isSuspended ? '#FECACA' : '#A7F3D0'}`
+                            color: isSuspended ? '#DC2626' : '#059669'
                           }}>
-                            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: isSuspended ? '#DC2626' : '#10B981' }} />
                             {user.status}
                           </span>
                         </div>
                       </div>
                     </div>
-
-                    <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '0.68rem', color: 'var(--text-dim)', display: 'block' }}>User ID</span>
-                      <strong style={{ fontSize: '0.75rem', color: '#64748B' }}>{user.id}</strong>
-                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 600 }}>{user.id}</span>
                   </div>
 
-                  {/* Contact & Credentials info */}
-                  <div style={{ background: '#F8FAFC', padding: '0.65rem 0.85rem', borderRadius: '8px', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.78rem', color: '#475569' }}>
-                      <Mail size={13} color="var(--text-dim)" />
-                      <span>{user.email}</span>
-                    </div>
-                    {user.phone && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.78rem', color: '#475569' }}>
-                        <Phone size={13} color="var(--text-dim)" />
-                        <span>{user.phone}</span>
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.78rem', color: '#475569' }}>
-                      <Key size={13} color="var(--text-dim)" />
-                      <span>Passcode PIN: <strong>•••• ({user.passcode || '1234'})</strong></span>
-                    </div>
-                  </div>
-
-                  {/* Module Access Summary */}
-                  <div style={{ marginBottom: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                      <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#334155' }}>
-                        Authorized Modules:
-                      </span>
-                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--accent-indigo)' }}>
-                        {allowedCount} of {AVAILABLE_MODULES.length} Allowed
-                      </span>
-                    </div>
-
-                    {/* Module Tags */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
-                      {AVAILABLE_MODULES.map(m => {
-                        const isAllowed = (user.allowedModules || []).includes(m.id);
-                        return (
-                          <span
-                            key={m.id}
-                            style={{
-                              fontSize: '0.66rem',
-                              fontWeight: 600,
-                              padding: '0.15rem 0.45rem',
-                              borderRadius: '4px',
-                              background: isAllowed ? '#F0FDF4' : '#F1F5F9',
-                              color: isAllowed ? '#166534' : '#94A3B8',
-                              border: `1px solid ${isAllowed ? '#BBF7D0' : '#E2E8F0'}`,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.2rem'
-                            }}
-                            title={isAllowed ? `Allowed: ${m.desc}` : `Restricted: No access to ${m.label}`}
-                          >
-                            {isAllowed ? <Check size={10} color="#166534" /> : <Lock size={9} color="#94A3B8" />}
-                            {m.label.split(' ')[0]}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Action Permissions Summary */}
-                  <div style={{ marginBottom: '1.2rem', padding: '0.5rem 0', borderTop: '1px solid var(--border-subtle)' }}>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.35rem' }}>
-                      Operational Permissions:
-                    </span>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
-                      {user.permissions?.canDisburseLoan && (
-                        <span style={{ fontSize: '0.65rem', background: '#ECFDF5', color: '#047857', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid #A7F3D0', fontWeight: 600 }}>
-                          ✓ Disburse Loans
-                        </span>
-                      )}
-                      {user.permissions?.canCollectPayment && (
-                        <span style={{ fontSize: '0.65rem', background: '#ECFDF5', color: '#047857', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid #A7F3D0', fontWeight: 600 }}>
-                          ✓ Collect Payments
-                        </span>
-                      )}
-                      {user.permissions?.canApproveLoan && (
-                        <span style={{ fontSize: '0.65rem', background: '#EEF2FF', color: '#4338CA', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid #C7D2FE', fontWeight: 600 }}>
-                          ✓ Approve Underwriting
-                        </span>
-                      )}
-                      {user.permissions?.canExportReports && (
-                        <span style={{ fontSize: '0.65rem', background: '#FFFBEB', color: '#B45309', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid #FDE68A', fontWeight: 600 }}>
-                          ✓ Export Data
-                        </span>
-                      )}
-                      {user.permissions?.canDeleteRecords && (
-                        <span style={{ fontSize: '0.65rem', background: '#FEF2F2', color: '#B91C1C', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid #FECACA', fontWeight: 600 }}>
-                          ✓ Delete Records
-                        </span>
-                      )}
-                    </div>
+                  <div style={{ background: '#F8FAFC', padding: '0.65rem 0.85rem', borderRadius: '8px', marginBottom: '0.85rem', fontSize: '0.78rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <div>Email: <strong>{user.email}</strong></div>
+                    <div>Passcode PIN: <strong>•••• ({user.passcode || '1234'})</strong></div>
+                    <div>Access: <strong style={{ color: '#059669' }}>{allowedCount} of {AVAILABLE_MODULES.length} Modules Allowed</strong></div>
                   </div>
                 </div>
 
-                {/* Footer Buttons */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-subtle)' }}>
-                  {/* Simulate Switch */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid #F1F5F9' }}>
                   <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedUserId(user.id);
+                      setActiveTab('permissions');
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '0.45rem',
+                      borderRadius: '8px',
+                      border: '1px solid #059669',
+                      background: '#ECFDF5',
+                      color: '#059669',
+                      fontSize: '0.76rem',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Edit Module Permissions →
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => onSwitchUser(user)}
                     disabled={isCurrent}
                     style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.35rem',
                       padding: '0.45rem 0.75rem',
                       borderRadius: '8px',
-                      border: '1px solid var(--border-subtle)',
-                      background: isCurrent ? '#EEF2FF' : '#FFF',
-                      color: isCurrent ? 'var(--accent-indigo)' : '#334155',
+                      border: '1px solid #CBD5E1',
+                      background: isCurrent ? '#F1F5F9' : '#FFF',
                       fontSize: '0.76rem',
-                      fontWeight: 700,
+                      fontWeight: 600,
+                      color: '#334155',
                       cursor: isCurrent ? 'default' : 'pointer'
                     }}
-                    title="Simulate this user's view in the application"
                   >
-                    <LogIn size={13} /> {isCurrent ? 'Current' : 'Simulate View'}
+                    {isCurrent ? 'Current' : 'Simulate'}
                   </button>
-
-                  {/* Edit Permissions */}
-                  <button
-                    onClick={() => handleOpenEdit(user)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.35rem',
-                      padding: '0.45rem 0.75rem',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border-subtle)',
-                      background: '#FFF',
-                      color: '#0F172A',
-                      fontSize: '0.76rem',
-                      fontWeight: 700,
-                      cursor: 'pointer'
-                    }}
-                    title="Edit user details and change module permissions"
-                  >
-                    <Edit3 size={13} /> Edit
-                  </button>
-
-                  {/* Toggle Status */}
-                  <button
-                    onClick={() => handleToggleUserStatus(user)}
-                    style={{
-                      padding: '0.45rem 0.65rem',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border-subtle)',
-                      background: isSuspended ? '#ECFDF5' : '#FEF2F2',
-                      color: isSuspended ? '#059669' : '#DC2626',
-                      fontSize: '0.76rem',
-                      fontWeight: 700,
-                      cursor: 'pointer'
-                    }}
-                    title={isSuspended ? 'Reactivate this user' : 'Suspend user login'}
-                  >
-                    {isSuspended ? 'Activate' : 'Suspend'}
-                  </button>
-
-                  {/* Delete (Cannot delete USR-001 root admin) */}
-                  {user.id !== 'USR-001' && (
-                    <button
-                      onClick={() => {
-                        if (confirm(`Are you sure you want to delete user ${user.name}? This will revoke their access completely.`)) {
-                          onDeleteUser(user.id);
-                        }
-                      }}
-                      style={{
-                        padding: '0.45rem 0.65rem',
-                        borderRadius: '8px',
-                        border: '1px solid #FECACA',
-                        background: '#FFF',
-                        color: '#DC2626',
-                        cursor: 'pointer'
-                      }}
-                      title="Permanently remove user"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  )}
                 </div>
               </div>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
 
       {/* ========================================================= */}
-      {/* ADD / EDIT USER & MODULE ACCESS CONTROL MODAL */}
+      {/* TAB 3: SYSTEM MODULES OVERVIEW */}
       {/* ========================================================= */}
-      {isModalOpen && (
+      {activeTab === 'modules' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+          {AVAILABLE_MODULES.map(m => {
+            const Icon = m.icon;
+            const usersWithAccess = appUsers.filter(u => (u.allowedModules || []).includes(m.id)).length;
+
+            return (
+              <div key={m.id} style={{ background: '#FFF', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '1.2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.6rem' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#ECFDF5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon size={18} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>{m.label}</h3>
+                    <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700 }}>{usersWithAccess} users granted access</span>
+                  </div>
+                </div>
+                <p style={{ fontSize: '0.76rem', color: '#64748B', margin: 0, lineHeight: 1.4 }}>{m.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL: ADD / EDIT USER PROFILE */}
+      {/* ========================================================= */}
+      {isUserModalOpen && (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -834,332 +858,125 @@ export default function UserManagementView({
             background: '#FFF',
             borderRadius: '16px',
             width: '100%',
-            maxWidth: '780px',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            border: '1px solid var(--border-subtle)'
+            maxWidth: '520px',
+            padding: '1.8rem',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
           }}>
-            {/* Modal Header */}
-            <div style={{
-              padding: '1.2rem 1.6rem',
-              borderBottom: '1px solid var(--border-subtle)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: '#F8FAFC'
-            }}>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: '0 0 1rem 0' }}>
+              {editingUserId ? 'Edit User' : 'Create New User Account'}
+            </h2>
+
+            <form onSubmit={handleSaveUserModalSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                  {editingUserId ? 'Edit User & Module Access' : 'Create New User & Grant Permissions'}
-                </h2>
-                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0.2rem 0 0 0' }}>
-                  Control exactly which modules and operations this user can access
-                </p>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Ajay Sharma"
+                  value={userFormData.name}
+                  onChange={(e) => setUserFormData({ ...userFormData, name: e.target.value })}
+                  className="form-input"
+                  style={{ width: '100%', boxSizing: 'border-box' }}
+                />
               </div>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-dim)',
-                  cursor: 'pointer',
-                  padding: '0.4rem',
-                  borderRadius: '8px'
-                }}
-              >
-                ✕
-              </button>
-            </div>
 
-            {/* Modal Form */}
-            <form onSubmit={handleFormSubmit} style={{ padding: '1.6rem' }}>
-              
-              {/* Profile Details Row */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.4rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Ramesh Kumar"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="form-input"
-                    style={{ fontSize: '0.84rem' }}
-                  />
-                </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                  Login Email *
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="ajay.sharma@dhanshri.com"
+                  value={userFormData.email}
+                  onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })}
+                  className="form-input"
+                  style={{ width: '100%', boxSizing: 'border-box' }}
+                />
+              </div>
 
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
-                    Login Email / Username *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="e.g. ramesh.field@dhanshri.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="form-input"
-                    style={{ fontSize: '0.84rem' }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
-                    Mobile Number
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    Mobile Phone
                   </label>
                   <input
                     type="tel"
                     placeholder="+91 98765 00000"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    value={userFormData.phone}
+                    onChange={(e) => setUserFormData({ ...userFormData, phone: e.target.value })}
                     className="form-input"
-                    style={{ fontSize: '0.84rem' }}
+                    style={{ width: '100%', boxSizing: 'border-box' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
-                    Login PIN / Passcode
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    Passcode PIN
                   </label>
                   <input
                     type="text"
                     placeholder="1234"
-                    value={formData.passcode}
-                    onChange={(e) => setFormData({ ...formData, passcode: e.target.value })}
+                    value={userFormData.passcode}
+                    onChange={(e) => setUserFormData({ ...userFormData, passcode: e.target.value })}
                     className="form-input"
-                    style={{ fontSize: '0.84rem' }}
+                    style={{ width: '100%', boxSizing: 'border-box' }}
                   />
                 </div>
+              </div>
 
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
-                    Role / Position (Auto-presets modules)
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    Role
                   </label>
                   <select
-                    value={formData.role}
-                    onChange={(e) => handleRoleChange(e.target.value)}
+                    value={userFormData.role}
+                    onChange={(e) => setUserFormData({ ...userFormData, role: e.target.value })}
                     className="form-input"
-                    style={{ fontSize: '0.84rem', fontWeight: 600 }}
+                    style={{ width: '100%', boxSizing: 'border-box' }}
                   >
-                    <option value="Admin">Admin (Full Access to Everything)</option>
-                    <option value="Branch Manager">Branch Manager</option>
-                    <option value="Field Collection Agent">Field Collection Agent (Route & Collections)</option>
-                    <option value="Cashier">Cashier (Payments & Receipts)</option>
-                    <option value="Credit Underwriter">Credit Underwriter (Appraisal & Approvals)</option>
-                    <option value="Auditor / Viewer">Auditor / Viewer (Read-only)</option>
-                    <option value="Custom">Custom (Manual Selection)</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Staff">Staff</option>
+                    <option value="Field Collection Agent">Field Collection Agent</option>
+                    <option value="Branch Cashier">Branch Cashier</option>
+                    <option value="Credit Underwriter">Credit Underwriter</option>
                   </select>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
-                    Account Status
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    Status
                   </label>
                   <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    value={userFormData.status}
+                    onChange={(e) => setUserFormData({ ...userFormData, status: e.target.value })}
                     className="form-input"
-                    style={{ fontSize: '0.84rem', fontWeight: 600 }}
+                    style={{ width: '100%', boxSizing: 'border-box' }}
                   >
-                    <option value="Active">Active (Allowed to Log In)</option>
-                    <option value="Suspended">Suspended (Access Temporarily Blocked)</option>
+                    <option value="Active">Active</option>
+                    <option value="Suspended">Suspended</option>
                   </select>
                 </div>
               </div>
 
-              {/* SECTION: MODULE ACCESS PERMISSIONS */}
-              <div style={{
-                background: '#F8FAFC',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: '12px',
-                padding: '1.2rem',
-                marginBottom: '1.4rem'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  <div>
-                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                      Module Permissions Checklist
-                    </h3>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.1rem 0 0 0' }}>
-                      Check the boxes for modules this user is authorized to view in the navigation menu
-                    </p>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <button
-                      type="button"
-                      onClick={handleSelectAllModules}
-                      style={{
-                        padding: '0.25rem 0.65rem',
-                        fontSize: '0.72rem',
-                        fontWeight: 700,
-                        background: '#EEF2FF',
-                        color: 'var(--accent-indigo)',
-                        border: '1px solid #C7D2FE',
-                        borderRadius: '6px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Select All
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleClearAllModules}
-                      style={{
-                        padding: '0.25rem 0.65rem',
-                        fontSize: '0.72rem',
-                        fontWeight: 700,
-                        background: '#FFF',
-                        color: '#64748B',
-                        border: '1px solid #CBD5E1',
-                        borderRadius: '6px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Clear
-                    </button>
-                  </div>
-                </div>
-
-                {/* Modules Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.65rem' }}>
-                  {AVAILABLE_MODULES.map(m => {
-                    const isChecked = formData.allowedModules.includes(m.id);
-                    const Icon = m.icon;
-
-                    return (
-                      <label
-                        key={m.id}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: '0.65rem',
-                          padding: '0.65rem 0.85rem',
-                          borderRadius: '8px',
-                          border: isChecked ? '1px solid #A5B4FC' : '1px solid #E2E8F0',
-                          background: isChecked ? '#EEF2FF' : '#FFF',
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => handleToggleModule(m.id)}
-                          style={{ marginTop: '0.2rem', accentColor: 'var(--accent-indigo)' }}
-                        />
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', fontWeight: 700, color: isChecked ? '#312E81' : '#334155' }}>
-                            <Icon size={14} color={isChecked ? 'var(--accent-indigo)' : '#64748B'} />
-                            {m.label}
-                          </div>
-                          <div style={{ fontSize: '0.68rem', color: '#64748B', marginTop: '0.15rem', lineHeight: '1.2' }}>
-                            {m.desc}
-                          </div>
-                        </div>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* SECTION: OPERATIONAL ACTION PERMISSIONS */}
-              <div style={{
-                background: '#F8FAFC',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: '12px',
-                padding: '1.2rem',
-                marginBottom: '1.6rem'
-              }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.2rem 0' }}>
-                  Operational Action Permissions
-                </h3>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0 0 0.85rem 0' }}>
-                  Grant specific execution rights (disbursing capital, approving loans, taking payments)
-                </p>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '0.65rem' }}>
-                  {[
-                    { key: 'canDisburseLoan', label: 'Disburse Money & Loans', desc: 'Can give real cash/bank loans to customers' },
-                    { key: 'canCollectPayment', label: 'Collect Cash & Receipts', desc: 'Can record collections & generate receipts' },
-                    { key: 'canApproveLoan', label: 'Approve Loan Applications', desc: 'Can accept/reject credit underwriting' },
-                    { key: 'canExportReports', label: 'Export Ledgers & Reports', desc: 'Can download financial CSV data' },
-                    { key: 'canDeleteRecords', label: 'Delete / Purge Records', desc: 'Can cancel or remove accounts/records' }
-                  ].map(act => {
-                    const isChecked = !!formData.permissions[act.key];
-                    return (
-                      <label
-                        key={act.key}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: '0.65rem',
-                          padding: '0.65rem 0.85rem',
-                          borderRadius: '8px',
-                          border: isChecked ? '1px solid #86EFAC' : '1px solid #E2E8F0',
-                          background: isChecked ? '#F0FDF4' : '#FFF',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => handleTogglePermission(act.key)}
-                          style={{ marginTop: '0.2rem', accentColor: '#16A34A' }}
-                        />
-                        <div>
-                          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: isChecked ? '#14532D' : '#334155' }}>
-                            {act.label}
-                          </div>
-                          <div style={{ fontSize: '0.68rem', color: '#64748B', marginTop: '0.15rem' }}>
-                            {act.desc}
-                          </div>
-                        </div>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.85rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '0.6rem' }}>
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  style={{
-                    padding: '0.6rem 1.2rem',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-subtle)',
-                    background: '#FFF',
-                    fontSize: '0.84rem',
-                    fontWeight: 600,
-                    color: '#64748B',
-                    cursor: 'pointer'
-                  }}
+                  onClick={() => setIsUserModalOpen(false)}
+                  style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #CBD5E1', background: '#FFF' }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn-primary"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.4rem',
-                    padding: '0.6rem 1.4rem',
-                    borderRadius: '8px',
-                    fontSize: '0.85rem',
-                    fontWeight: 700
-                  }}
+                  style={{ padding: '0.5rem 1.2rem', borderRadius: '8px', border: 'none', background: '#059669', color: '#FFF', fontWeight: 700 }}
                 >
-                  <Check size={16} /> Save User Permissions
+                  Save & Configure Permissions
                 </button>
               </div>
-
             </form>
           </div>
         </div>
