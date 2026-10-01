@@ -86,15 +86,80 @@ export default function DashboardView({
     }
   });
 
+  const todayStr = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const greeting = new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 17 ? 'Good Afternoon' : 'Good Evening';
+
   return (
     <div style={{ padding: '1.5rem 1.8rem', maxWidth: '1440px', margin: '0 auto' }}>
-      
-      {/* Clean Non-Redundant Top Bar (Duplicates removed, clean sync & export status) */}
+
+      {/* Today's Greeting Strip */}
+      <div style={{
+        background: 'linear-gradient(135deg, #4F46E5 0%, #312E81 100%)',
+        borderRadius: '16px',
+        padding: '1.2rem 1.6rem',
+        marginBottom: '1.2rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '1rem',
+        boxShadow: '0 8px 20px -4px rgba(79,70,229,0.35)'
+      }}>
+        <div>
+          <div style={{ fontSize: '0.75rem', color: '#C7D2FE', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            {todayStr}
+          </div>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF', margin: '0.2rem 0 0 0' }}>
+            {greeting}, {currentUser?.name?.split(' ')[0] || 'Admin'} 👋
+          </h2>
+          <p style={{ fontSize: '0.78rem', color: '#A5B4FC', margin: '0.2rem 0 0 0' }}>
+            {customers.length} Borrowers • {activeAccounts.length} Active Loans • {overdueAccountsCount > 0 ? `⚠️ ${overdueAccountsCount} Overdue` : '✓ Portfolio Healthy'}
+          </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+          {onOpenDisburseLoan && (
+            <button onClick={onOpenDisburseLoan} style={{
+              padding: '0.6rem 1.1rem', borderRadius: '10px',
+              background: 'rgba(255,255,255,0.15)', color: '#FFF',
+              border: '1px solid rgba(255,255,255,0.3)', fontSize: '0.82rem',
+              fontWeight: 700, cursor: 'pointer', backdropFilter: 'blur(8px)',
+              display: 'flex', alignItems: 'center', gap: '0.35rem',
+              transition: 'all 0.2s'
+            }}>
+              + Give Loan
+            </button>
+          )}
+          {onOpenCollectPayment && (
+            <button onClick={onOpenCollectPayment} style={{
+              padding: '0.6rem 1.1rem', borderRadius: '10px',
+              background: '#059669', color: '#FFF',
+              border: '1px solid #047857', fontSize: '0.82rem',
+              fontWeight: 700, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: '0.35rem',
+              transition: 'all 0.2s'
+            }}>
+              💵 Collect Payment
+            </button>
+          )}
+          <button onClick={() => onNavigateTo('dailyRoute')} style={{
+            padding: '0.6rem 1.1rem', borderRadius: '10px',
+            background: '#D97706', color: '#FFF',
+            border: '1px solid #B45309', fontSize: '0.82rem',
+            fontWeight: 700, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '0.35rem',
+            transition: 'all 0.2s'
+          }}>
+            📅 Today's Route
+          </button>
+        </div>
+      </div>
+
+      {/* Clean Data Utilities Bar */}
       <div style={{
         background: '#FFFFFF',
         border: '1px solid var(--border-subtle)',
         borderRadius: 'var(--radius-lg)',
-        padding: '0.9rem 1.4rem',
+        padding: '0.75rem 1.4rem',
         marginBottom: '1.4rem',
         display: 'flex',
         alignItems: 'center',
@@ -306,78 +371,115 @@ export default function DashboardView({
 
       </div>
 
-      {/* Secondary KPI Cards Grid (All Cards Are Clickable) */}
+      {/* Secondary KPI Cards Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '1.2rem', marginBottom: '1.8rem' }}>
         
         {/* KPI 1: Active Accounts */}
         <div 
           onClick={() => onNavigateTo('customer360')}
-          className="glass-panel" 
-          style={{ padding: '1.2rem', cursor: 'pointer', transition: 'transform 0.15s ease, box-shadow 0.15s ease' }}
-          title="Click to view all Active Accounts in Borrowers 360"
+          className="glass-panel kpi-card" 
+          style={{ padding: '1.2rem', cursor: 'pointer', transition: 'transform 0.18s ease, box-shadow 0.18s ease', borderLeft: '4px solid #059669' }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 24px -4px rgba(5,150,105,0.15)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-glow)'; }}
+          title="Click to view all Active Accounts"
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700 }}>ACTIVE LOAN ACCOUNTS</span>
-            <Landmark size={20} color="#059669" />
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Active Loans</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Landmark size={17} color="#059669" />
+            </div>
           </div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>{activeAccounts.length} Loans</h2>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#047857', margin: 0 }}>{activeAccounts.length}</h2>
           <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-            {closedAccounts.length} Fully Repaid • View All <ChevronRight size={11} />
+            Accounts Active • {closedAccounts.length} Closed <ChevronRight size={11} />
           </span>
         </div>
 
         {/* KPI 2: Total Borrowers */}
         <div 
           onClick={() => onNavigateTo('customer360')}
-          className="glass-panel" 
-          style={{ padding: '1.2rem', cursor: 'pointer', transition: 'transform 0.15s ease, box-shadow 0.15s ease' }}
-          title="Click to open Customer 360 directory"
+          className="glass-panel kpi-card" 
+          style={{ padding: '1.2rem', cursor: 'pointer', transition: 'transform 0.18s ease, box-shadow 0.18s ease', borderLeft: '4px solid #4F46E5' }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 24px -4px rgba(79,70,229,0.15)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-glow)'; }}
+          title="Click to open Customer 360"
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700 }}>REGISTERED BORROWERS</span>
-            <Users size={20} color="#4F46E5" />
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Borrowers</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Users size={17} color="#4F46E5" />
+            </div>
           </div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#4338CA', margin: 0 }}>{customers.length} Borrowers</h2>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#4338CA', margin: 0 }}>{customers.length}</h2>
           <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 600, marginTop: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-            ✓ {verifiedBorrowersCount} KYC Verified • Open 360 <ChevronRight size={11} />
+            ✓ {verifiedBorrowersCount} KYC Verified <ChevronRight size={11} />
           </span>
         </div>
 
-        {/* KPI 3: KYC Documents Verification Queue */}
+        {/* KPI 3: KYC Documents */}
         <div 
-          onClick={() => onNavigateTo('customer360')}
-          className="glass-panel" 
-          style={{ padding: '1.2rem', cursor: 'pointer', transition: 'transform 0.15s ease, box-shadow 0.15s ease' }}
+          onClick={() => onNavigateTo('docsVault')}
+          className="glass-panel kpi-card" 
+          style={{ padding: '1.2rem', cursor: 'pointer', transition: 'transform 0.18s ease, box-shadow 0.18s ease', borderLeft: '4px solid #0284C7' }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 24px -4px rgba(2,132,199,0.15)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-glow)'; }}
           title="Click to review Aadhaar & PAN documents"
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700 }}>AADHAAR & PAN DOCS</span>
-            <ShieldCheck size={20} color="#0284C7" />
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>KYC Docs</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#F0F9FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ShieldCheck size={17} color="#0284C7" />
+            </div>
           </div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0369A1', margin: 0 }}>
-            {customers.reduce((sum, c) => sum + (c.documents?.length || 0), 0)} Attached
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#0369A1', margin: 0 }}>
+            {customers.reduce((sum, c) => sum + (c.documents?.length || 0), 0)}
           </h2>
           <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-            {pendingKYCCount > 0 ? `${pendingKYCCount} Pending Review` : 'All documents verified'} • View <ChevronRight size={11} />
+            {pendingKYCCount > 0 ? `${pendingKYCCount} Pending Review` : 'All docs verified'} <ChevronRight size={11} />
           </span>
         </div>
 
         {/* KPI 4: Overdue Radar */}
         <div 
           onClick={() => onNavigateTo('overdue')}
-          className="glass-panel" 
-          style={{ padding: '1.2rem', cursor: 'pointer', transition: 'transform 0.15s ease, box-shadow 0.15s ease' }}
-          title="Click to view Overdue Recovery module"
+          className="glass-panel kpi-card" 
+          style={{ padding: '1.2rem', cursor: 'pointer', transition: 'transform 0.18s ease, box-shadow 0.18s ease', borderLeft: `4px solid ${overdueAccountsCount > 0 ? '#DC2626' : '#10B981'}` }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 24px -4px rgba(220,38,38,0.12)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-glow)'; }}
+          title="Click to view Overdue Recovery"
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700 }}>OVERDUE ACCOUNTS</span>
-            <AlertTriangle size={20} color={overdueAccountsCount > 0 ? '#DC2626' : '#10B981'} />
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Overdue</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: overdueAccountsCount > 0 ? '#FEF2F2' : '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <AlertTriangle size={17} color={overdueAccountsCount > 0 ? '#DC2626' : '#10B981'} />
+            </div>
           </div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: overdueAccountsCount > 0 ? '#DC2626' : '#059669', margin: 0 }}>
-            {overdueAccountsCount} Accounts
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: overdueAccountsCount > 0 ? '#DC2626' : '#059669', margin: 0 }}>
+            {overdueAccountsCount}
           </h2>
           <span style={{ fontSize: '0.72rem', color: overdueAccountsCount > 0 ? '#DC2626' : '#059669', fontWeight: 600, marginTop: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-            {overdueAccountsCount > 0 ? 'Action Required • Open Recovery →' : '✓ 0 overdue portfolio'}
+            {overdueAccountsCount > 0 ? '⚠️ Action Required' : '✓ Portfolio Healthy'} <ChevronRight size={11} />
+          </span>
+        </div>
+
+        {/* KPI 5: Today's Collections */}
+        <div 
+          onClick={() => onNavigateTo('dailyRoute')}
+          className="glass-panel kpi-card" 
+          style={{ padding: '1.2rem', cursor: 'pointer', transition: 'transform 0.18s ease, box-shadow 0.18s ease', borderLeft: '4px solid #D97706' }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 24px -4px rgba(217,119,6,0.15)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-glow)'; }}
+          title="Open Today's Route"
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Total Payments</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#FFFBEB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Receipt size={17} color="#D97706" />
+            </div>
+          </div>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#D97706', margin: 0 }}>{payments.length}</h2>
+          <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+            Receipts Logged • View Ledger <ChevronRight size={11} />
           </span>
         </div>
 
