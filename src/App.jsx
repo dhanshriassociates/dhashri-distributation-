@@ -719,6 +719,7 @@ export default function App() {
             financeAccounts={financeAccounts}
             payments={payments}
             overdueFollowups={overdueFollowups}
+            currentUser={currentUser}
             onNavigateTo={setActiveView}
             onOpenDisburseLoan={() => setIsDisburseLoanOpen(true)}
             onOpenCollectPayment={() => setActiveView('payments')}
