@@ -70,15 +70,6 @@ export default function LoginPage({
     }, 350);
   };
 
-  // Quick 1-Click Fast Login
-  const handleQuickLogin = (targetUser) => {
-    setEmail(targetUser.email);
-    setPasscode(targetUser.passcode || '1234');
-    setErrorMessage('');
-    confetti({ particleCount: 40, spread: 50, origin: { y: 0.6 } });
-    onLoginSuccess(targetUser);
-  };
-
   return (
     <div style={{
       minHeight: '100vh',
@@ -295,9 +286,9 @@ export default function LoginPage({
             className="btn-primary"
             style={{
               width: '100%',
-              padding: '0.8rem',
+              padding: '0.85rem',
               borderRadius: '12px',
-              fontSize: '0.92rem',
+              fontSize: '0.94rem',
               fontWeight: 800,
               display: 'flex',
               alignItems: 'center',
@@ -305,57 +296,13 @@ export default function LoginPage({
               gap: '0.5rem',
               background: 'linear-gradient(135deg, #4F46E5, #4338CA)',
               boxShadow: '0 8px 20px -4px rgba(79, 70, 229, 0.4)',
-              cursor: isLoading ? 'wait' : 'pointer'
+              cursor: isLoading ? 'wait' : 'pointer',
+              marginBottom: '1.2rem'
             }}
           >
             {isLoading ? 'Verifying Credentials...' : 'Sign In to Dashboard'} <ArrowRight size={16} />
           </button>
         </form>
-
-        {/* Divider */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          margin: '1.6rem 0 1.2rem 0',
-          gap: '0.8rem'
-        }}>
-          <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }} />
-          <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Instant 1-Click Fast Logins
-          </span>
-          <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }} />
-        </div>
-
-        {/* Fast 1-Click Test Logins Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem', marginBottom: '1.5rem' }}>
-          {appUsers.slice(0, 4).map(u => {
-            const isAdmin = u.role === 'Admin';
-            return (
-              <button
-                key={u.id}
-                type="button"
-                onClick={() => handleQuickLogin(u)}
-                style={{
-                  padding: '0.65rem 0.75rem',
-                  borderRadius: '10px',
-                  border: isAdmin ? '1.5px solid #C7D2FE' : '1px solid #E2E8F0',
-                  background: isAdmin ? '#EEF2FF' : '#F8FAFC',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease'
-                }}
-                title={`Log in instantly as ${u.name}`}
-              >
-                <div style={{ fontSize: '0.78rem', fontWeight: 800, color: isAdmin ? '#312E81' : '#1E293B', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                  {isAdmin ? '👑' : '👔'} {u.name.split(' ')[0]}
-                </div>
-                <div style={{ fontSize: '0.68rem', color: isAdmin ? '#4338CA' : '#64748B', marginTop: '0.15rem' }}>
-                  {u.role.split(' ')[0]} • ({u.allowedModules?.length || 0} modules)
-                </div>
-              </button>
-            );
-          })}
-        </div>
 
         {/* Security & Access Info Footer */}
         <div style={{
