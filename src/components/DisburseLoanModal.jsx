@@ -860,11 +860,11 @@ export default function DisburseLoanModal({
               Loan Terms, Interest Scheme & Disbursal Amount
             </h3>
 
-            {/* Amount & Scheme Selector */}
+            {/* Unified Loan Terms Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.2rem' }}>
               <div>
                 <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                  {interestScheme === 'fix_total' ? 'Principal Disbursed (₹) *' : 'Principal Loan Amount (₹) *'}
+                  Principal Loan Amount (₹) *
                 </label>
                 <div style={{ position: 'relative' }}>
                   <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: '#059669', fontSize: '1.1rem' }}>₹</span>
@@ -876,7 +876,7 @@ export default function DisburseLoanModal({
                     value={loanAmount}
                     onChange={(e) => setLoanAmount(e.target.value)}
                     className="form-input"
-                    style={{ paddingLeft: '2rem', fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}
+                    style={{ paddingLeft: '2rem', fontSize: '1.1rem', fontWeight: 700, color: '#0F172A' }}
                   />
                 </div>
               </div>
@@ -889,7 +889,7 @@ export default function DisburseLoanModal({
                   value={interestScheme}
                   onChange={(e) => setInterestScheme(e.target.value)}
                   className="form-select"
-                  style={{ fontWeight: 700, color: interestScheme === 'fix_total' ? '#059669' : '#1E293B', background: interestScheme === 'fix_total' ? '#ECFDF5' : '#FFF' }}
+                  style={{ fontWeight: 600, color: '#0F172A' }}
                 >
                   <option value="fix_total">Fixed Total Return Scheme</option>
                   <option value="monthly_percent">Monthly % Interest Rate</option>
@@ -898,34 +898,12 @@ export default function DisburseLoanModal({
                   <option value="flat_emi">Flat Rate EMI</option>
                 </select>
               </div>
-            </div>
 
-            {/* Scheme 1: FIX TOTAL REPAYMENT SCHEME CONTROLS */}
-            {interestScheme === 'fix_total' && (
-              <div style={{
-                background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)',
-                border: '2px solid #86EFAC',
-                borderRadius: 'var(--radius-lg)',
-                padding: '1.2rem',
-                marginBottom: '1.2rem',
-                boxShadow: '0 4px 12px rgba(5, 150, 105, 0.08)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Sparkles size={18} color="#059669" />
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#065F46' }}>
-                      Fixed Total Return Configuration
-                    </h4>
-                  </div>
-                  <span style={{ fontSize: '0.72rem', background: '#059669', color: '#FFF', padding: '0.2rem 0.6rem', borderRadius: '12px', fontWeight: 700 }}>
-                    Clear Borrowing Agreement
-                  </span>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-                  {/* Total Return Target Input */}
+              {/* Scheme-Specific Fields seamlessly integrated in the exact same grid */}
+              {interestScheme === 'fix_total' ? (
+                <>
                   <div>
-                    <label style={{ fontSize: '0.78rem', color: '#065F46', fontWeight: 700, display: 'block', marginBottom: '0.35rem' }}>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
                       Target Repayment Amount (₹) *
                     </label>
                     <div style={{ position: 'relative' }}>
@@ -938,101 +916,49 @@ export default function DisburseLoanModal({
                         value={totalReturnTarget}
                         onChange={(e) => setTotalReturnTarget(e.target.value)}
                         className="form-input"
-                        style={{ paddingLeft: '2rem', fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', border: '2px solid #10B981' }}
+                        style={{ paddingLeft: '2rem', fontSize: '1.1rem', fontWeight: 700, color: '#0F172A' }}
                       />
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: '#047857', fontWeight: 600, marginTop: '0.25rem' }}>
-                      Total Profit / Yield: <strong>{formatCurrency(Math.max(0, (parseFloat(totalReturnTarget) || principal) - principal))}</strong>
-                    </div>
                   </div>
 
-                  {/* Frequency: Daily / Weekly / Monthly */}
                   <div>
-                    <label style={{ fontSize: '0.78rem', color: '#065F46', fontWeight: 700, display: 'block', marginBottom: '0.35rem' }}>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
                       Payment Frequency *
                     </label>
-                    <div style={{ display: 'flex', gap: '0.4rem' }}>
-                      {[
-                        { id: 'daily', label: '☀️ Daily', icon: Sun },
-                        { id: 'weekly', label: '📅 Weekly', icon: Repeat },
-                        { id: 'monthly', label: '📆 Monthly', icon: Calendar }
-                      ].map(freq => (
-                        <button
-                          key={freq.id}
-                          type="button"
-                          onClick={() => setFixFrequency(freq.id)}
-                          style={{
-                            flex: 1,
-                            padding: '0.55rem 0.4rem',
-                            borderRadius: '8px',
-                            border: fixFrequency === freq.id ? '2px solid #059669' : '1px solid #CBD5E1',
-                            background: fixFrequency === freq.id ? '#059669' : '#FFF',
-                            color: fixFrequency === freq.id ? '#FFF' : '#334155',
-                            fontWeight: 700,
-                            fontSize: '0.76rem',
-                            cursor: 'pointer',
-                            textAlign: 'center'
-                          }}
-                        >
-                          {freq.label}
-                        </button>
-                      ))}
-                    </div>
+                    <select
+                      value={fixFrequency}
+                      onChange={(e) => setFixFrequency(e.target.value)}
+                      className="form-select"
+                      style={{ fontWeight: 600 }}
+                    >
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
                   </div>
 
-                  {/* Mode: By Kist Amount vs By Total Count */}
                   <div>
-                    <label style={{ fontSize: '0.78rem', color: '#065F46', fontWeight: 700, display: 'block', marginBottom: '0.35rem' }}>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
                       Calculation Method *
                     </label>
-                    <div style={{ display: 'flex', gap: '0.4rem' }}>
-                      <button
-                        type="button"
-                        onClick={() => setFixKistMode('by_amount')}
-                        style={{
-                          flex: 1,
-                          padding: '0.55rem 0.5rem',
-                          borderRadius: '8px',
-                          border: fixKistMode === 'by_amount' ? '2px solid #4F46E5' : '1px solid #CBD5E1',
-                          background: fixKistMode === 'by_amount' ? '#EEF2FF' : '#FFF',
-                          color: fixKistMode === 'by_amount' ? '#4338CA' : '#334155',
-                          fontWeight: 700,
-                          fontSize: '0.75rem',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        ₹ Set Installment Amount
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFixKistMode('by_count')}
-                        style={{
-                          flex: 1,
-                          padding: '0.55rem 0.5rem',
-                          borderRadius: '8px',
-                          border: fixKistMode === 'by_count' ? '2px solid #4F46E5' : '1px solid #CBD5E1',
-                          background: fixKistMode === 'by_count' ? '#EEF2FF' : '#FFF',
-                          color: fixKistMode === 'by_count' ? '#4338CA' : '#334155',
-                          fontWeight: 700,
-                          fontSize: '0.75rem',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        🔢 Set Duration
-                      </button>
-                    </div>
+                    <select
+                      value={fixKistMode}
+                      onChange={(e) => setFixKistMode(e.target.value)}
+                      className="form-select"
+                      style={{ fontWeight: 600 }}
+                    >
+                      <option value="by_amount">Set Installment Amount (₹ / installment)</option>
+                      <option value="by_count">Set Total Number of Installments</option>
+                    </select>
                   </div>
-                </div>
 
-                {/* Input for selected mode */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', background: '#FFF', padding: '0.9rem 1rem', borderRadius: '10px', border: '1px solid #A7F3D0', marginBottom: '0.8rem' }}>
                   {fixKistMode === 'by_amount' ? (
                     <div>
-                      <label style={{ fontSize: '0.78rem', color: '#1E293B', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>
-                        Customer Installment Amount (₹ / {fixFrequency === 'daily' ? 'day' : fixFrequency === 'weekly' ? 'week' : 'month'}) *
+                      <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                        Installment Amount (₹ / {fixFrequency === 'daily' ? 'day' : fixFrequency === 'weekly' ? 'week' : 'month'}) *
                       </label>
                       <div style={{ position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: '#4F46E5' }}>₹</span>
+                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: '#4F46E5', fontSize: '1.1rem' }}>₹</span>
                         <input
                           type="number"
                           min={1}
@@ -1040,17 +966,14 @@ export default function DisburseLoanModal({
                           value={fixInstallmentAmount}
                           onChange={(e) => setFixInstallmentAmount(e.target.value)}
                           className="form-input"
-                          style={{ paddingLeft: '1.8rem', fontWeight: 800, fontSize: '1.05rem', color: '#4F46E5' }}
+                          style={{ paddingLeft: '2rem', fontWeight: 700, fontSize: '1.1rem', color: '#0F172A' }}
                         />
-                      </div>
-                      <div style={{ fontSize: '0.74rem', color: '#059669', fontWeight: 700, marginTop: '0.3rem' }}>
-                        ➔ Fully settled in <strong>{fixCalculatedDays}</strong> {fixFrequency === 'daily' ? 'Days' : fixFrequency === 'weekly' ? 'Weeks' : 'Months'}
                       </div>
                     </div>
                   ) : (
                     <div>
-                      <label style={{ fontSize: '0.78rem', color: '#1E293B', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>
-                        Total Number of Installments / Duration *
+                      <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                        Total Number of Installments *
                       </label>
                       <input
                         type="number"
@@ -1059,16 +982,13 @@ export default function DisburseLoanModal({
                         value={fixTotalCount}
                         onChange={(e) => setFixTotalCount(e.target.value)}
                         className="form-input"
-                        style={{ fontWeight: 800, fontSize: '1.05rem', color: '#4F46E5' }}
+                        style={{ fontWeight: 700, fontSize: '1.1rem', color: '#0F172A' }}
                       />
-                      <div style={{ fontSize: '0.74rem', color: '#059669', fontWeight: 700, marginTop: '0.3rem' }}>
-                        ➔ Installment amount: <strong>{formatCurrency(fixCalculatedInstallment)}</strong> per {fixFrequency === 'daily' ? 'day' : fixFrequency === 'weekly' ? 'week' : 'month'}
-                      </div>
                     </div>
                   )}
 
                   <div>
-                    <label style={{ fontSize: '0.78rem', color: '#1E293B', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
                       Disbursal Date
                     </label>
                     <input
@@ -1078,104 +998,90 @@ export default function DisburseLoanModal({
                       className="form-input"
                       style={{ fontWeight: 600 }}
                     />
-                    <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '0.3rem' }}>
-                      Estimated End Date: <strong style={{ color: '#0F172A' }}>{fixEndDateStr}</strong>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {interestScheme === 'monthly_percent' && (
+                    <div>
+                      <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                        Monthly Interest Rate (% per month)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0.1"
+                        value={monthlyInterestRate}
+                        onChange={(e) => setMonthlyInterestRate(e.target.value)}
+                        className="form-input"
+                        style={{ fontWeight: 700, color: '#0F172A' }}
+                      />
                     </div>
-                  </div>
-                </div>
+                  )}
 
-                {/* Customer Explanation Ribbon */}
-                <div style={{
-                  background: '#064E3B',
-                  color: '#ECFDF5',
-                  padding: '0.75rem 1rem',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: '0.6rem',
-                  fontSize: '0.82rem'
-                }}>
-                  <div>
-                    <strong>📋 Borrowing Terms Summary:</strong> Disbursed: <strong>{formatCurrency(principal)}</strong> ➔ Repayment Target: <strong>{formatCurrency(totalReturnTarget)}</strong> (Profit: +{formatCurrency(estimatedTotalInterest)})
-                  </div>
-                  <div style={{ background: '#059669', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: 800, color: '#FFF' }}>
-                    {formatCurrency(estimatedEmi)} / {fixFrequency === 'daily' ? 'day' : fixFrequency === 'weekly' ? 'week' : 'month'} × {fixCalculatedDays} installments
-                  </div>
-                </div>
-              </div>
-            )}
+                  {interestScheme === 'daily_fixed' && (
+                    <div>
+                      <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                        Daily Interest Rate (₹ / day)
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={dailyRateRupees}
+                        onChange={(e) => setDailyRateRupees(e.target.value)}
+                        className="form-input"
+                        style={{ fontWeight: 700, color: '#0F172A' }}
+                      />
+                    </div>
+                  )}
 
-            {/* Schemes 2-5: STANDARD INTEREST RATE INPUTS */}
-            {interestScheme !== 'fix_total' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.2rem' }}>
-                {interestScheme === 'monthly_percent' && (
-                  <div>
-                    <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                      Monthly Interest Rate (% per month)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      min="0.1"
-                      value={monthlyInterestRate}
-                      onChange={(e) => setMonthlyInterestRate(e.target.value)}
-                      className="form-input"
-                      style={{ fontWeight: 700, color: '#4F46E5' }}
-                    />
-                  </div>
-                )}
+                  {(interestScheme === 'reducing_emi' || interestScheme === 'flat_emi') && (
+                    <div>
+                      <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                        Annual Interest Rate (% p.a.)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.25"
+                        min="1"
+                        value={annualRatePct}
+                        onChange={(e) => setAnnualRatePct(e.target.value)}
+                        className="form-input"
+                        style={{ fontWeight: 700, color: '#0F172A' }}
+                      />
+                    </div>
+                  )}
 
-                {interestScheme === 'daily_fixed' && (
                   <div>
                     <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                      Daily Interest Rate (₹ / day)
+                      Tenure Duration (Months)
                     </label>
                     <input
                       type="number"
                       min="1"
-                      value={dailyRateRupees}
-                      onChange={(e) => setDailyRateRupees(e.target.value)}
+                      max="120"
+                      value={tenureMonths}
+                      onChange={(e) => setTenureMonths(e.target.value)}
                       className="form-input"
-                      style={{ fontWeight: 700, color: '#4F46E5' }}
+                      style={{ fontWeight: 700 }}
                     />
                   </div>
-                )}
 
-                {(interestScheme === 'reducing_emi' || interestScheme === 'flat_emi') && (
                   <div>
                     <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                      Annual Interest Rate (% p.a.)
+                      Disbursal Date
                     </label>
                     <input
-                      type="number"
-                      step="0.25"
-                      min="1"
-                      value={annualRatePct}
-                      onChange={(e) => setAnnualRatePct(e.target.value)}
+                      type="date"
+                      value={disbursalDate}
+                      onChange={(e) => setDisbursalDate(e.target.value)}
                       className="form-input"
-                      style={{ fontWeight: 700, color: '#4F46E5' }}
+                      style={{ fontWeight: 600 }}
                     />
                   </div>
-                )}
-
-                <div>
-                  <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                    Tenure Duration (Months)
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="120"
-                    value={tenureMonths}
-                    onChange={(e) => setTenureMonths(e.target.value)}
-                    className="form-input"
-                    style={{ fontWeight: 700 }}
-                  />
-                </div>
-              </div>
-            )}
+                </>
+              )}
+            </div>
 
             {/* Live Financial Breakdown Box */}
             <div style={{

@@ -129,11 +129,11 @@ export default function NewLoanModal({ customers, teamMembers, activeRole, onClo
           </div>
 
           {/* Rate & Details Grid */}
-          {byajType === 'Fix Total Wapsi' ? (
-            <div style={{ background: '#F0FDF4', padding: '0.9rem', borderRadius: '8px', border: '1px solid #A7F3D0', marginBottom: '1.2rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.8rem', marginBottom: '0.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.2rem' }}>
+            {byajType === 'Fix Total Wapsi' ? (
+              <>
                 <div>
-                  <label style={{ fontSize: '0.74rem', color: '#065F46', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>
+                  <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
                     Target Repayment (₹)
                   </label>
                   <input
@@ -141,21 +141,21 @@ export default function NewLoanModal({ customers, teamMembers, activeRole, onClo
                     value={totalReturnTarget}
                     onChange={(e) => setTotalReturnTarget(e.target.value)}
                     className="form-input"
-                    style={{ fontWeight: 800, color: '#059669' }}
+                    style={{ fontWeight: 700, color: '#0F172A' }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.74rem', color: '#065F46', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>
+                  <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
                     Frequency
                   </label>
-                  <select value={fixFrequency} onChange={(e) => setFixFrequency(e.target.value)} className="form-select" style={{ fontSize: '0.82rem' }}>
+                  <select value={fixFrequency} onChange={(e) => setFixFrequency(e.target.value)} className="form-select">
                     <option value="daily">Daily</option>
                     <option value="weekly">Weekly</option>
                     <option value="monthly">Monthly</option>
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.74rem', color: '#065F46', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>
+                  <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
                     Installment Amount (₹)
                   </label>
                   <input
@@ -163,62 +163,64 @@ export default function NewLoanModal({ customers, teamMembers, activeRole, onClo
                     value={fixKistAmount}
                     onChange={(e) => setFixKistAmount(e.target.value)}
                     className="form-input"
-                    style={{ fontWeight: 800, color: '#4F46E5' }}
+                    style={{ fontWeight: 700, color: '#0F172A' }}
                   />
                 </div>
-              </div>
-              <div style={{ fontSize: '0.72rem', color: '#047857', fontWeight: 600 }}>
-                💡 Expected Profit: {formatINR(Math.max(0, totalReturnTarget - principalAmount))} | Total {Math.ceil(totalReturnTarget / (fixKistAmount || 1))} Installments
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1.2rem' }}>
-              {byajType === 'Monthly % Byaj' ? (
                 <div>
                   <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                    Monthly Interest Rate (%)
+                    Disbursal Date
                   </label>
                   <input
-                    type="number"
-                    step="0.1"
-                    value={monthlyRatePct}
-                    onChange={(e) => setMonthlyRatePct(e.target.value)}
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
                     className="form-input"
                   />
-                  <span style={{ fontSize: '0.72rem', color: '#10B981' }}>
-                    Yield: {formatINR((principalAmount * monthlyRatePct) / 100)} / month
-                  </span>
                 </div>
-              ) : (
-                <div>
-                  <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                    Daily Interest Rate (₹ / Day)
-                  </label>
-                  <input
-                    type="number"
-                    value={dailyRateRupees}
-                    onChange={(e) => setDailyRateRupees(e.target.value)}
-                    className="form-input"
-                  />
-                  <span style={{ fontSize: '0.72rem', color: '#10B981' }}>
-                    Yield: {formatINR(dailyRateRupees * 30)} / month
-                  </span>
-                </div>
-              )}
+              </>
+            ) : (
+              <>
+                {byajType === 'Monthly % Byaj' ? (
+                  <div>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                      Monthly Interest Rate (%)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={monthlyRatePct}
+                      onChange={(e) => setMonthlyRatePct(e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                      Daily Interest Rate (₹ / Day)
+                    </label>
+                    <input
+                      type="number"
+                      value={dailyRateRupees}
+                      onChange={(e) => setDailyRateRupees(e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+                )}
 
-              <div>
-                <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                  Disbursal Date
-                </label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="form-input"
-                />
-              </div>
-            </div>
-          )}
+                <div>
+                  <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                    Disbursal Date
+                  </label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="form-input"
+                  />
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Collateral Asset Vault Section */}
           <div style={{
