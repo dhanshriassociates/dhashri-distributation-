@@ -9,20 +9,26 @@ export default function PaymentsLedgerView({ payments = [], financeAccounts = []
   const [paymentMode, setPaymentMode] = useState('UPI');
   const [referenceNo, setReferenceNo] = useState('');
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [searchFilter, setSearchFilter] = useState('');
 
+  // Always resolve valid active account
   const activeAcc = financeAccounts.find(a => a.id === selectedAccountId) || financeAccounts[0];
   const dueEmi = activeAcc?.emiSchedule?.find(s => s.status !== 'paid') || activeAcc?.emiSchedule?.[0];
 
   const [amountPaid, setAmountPaid] = useState(dueEmi?.emiAmount || 5000);
 
-  const handleOpenCollect = () => {
+  const handleOpenCollect = (accId = null) => {
     if (financeAccounts.length === 0) {
       alert('No active loan accounts exist yet. Please disburse a loan first.');
       return;
     }
-    const acc = financeAccounts.find(a => a.id === selectedAccountId) || financeAccounts[0];
-    const due = acc?.emiSchedule?.find(s => s.status !== 'paid') || acc?.emiSchedule?.[0];
-    setAmountPaid(due?.emiAmount || 5000);
+    const targetId = accId || selectedAccountId || financeAccounts[0]?.id;
+    const acc = financeAccounts.find(a => a.id === targetId) || financeAccounts[0];
+    if (acc) {
+      setSelectedAccountId(acc.id);
+      const due = acc?.emiSchedule?.find(s => s.status !== 'paid') || acc?.emiSchedule?.[0];
+      setAmountPaid(due?.emiAmount || 5000);
+    }
     setReferenceNo(`TXN-${Math.floor(100000 + Math.random() * 900000)}`);
     setIsCollectModalOpen(true);
   };
@@ -83,9 +89,22 @@ export default function PaymentsLedgerView({ payments = [], financeAccounts = []
           </p>
         </div>
 
-        <button onClick={handleOpenCollect} className="btn-emerald">
-          <Plus size={16} /> + Collect Payment / EMI
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative' }}>
+            <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+            <input
+              type="text"
+              placeholder="Search receipt / borrower..."
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              className="form-input"
+              style={{ paddingLeft: '2rem', width: '220px', fontSize: '0.82rem' }}
+            />
+          </div>
+          <button onClick={() => handleOpenCollect()} className="btn-emerald">
+            <Plus size={16} /> + Collect Payment / EMI
+          </button>
+        </div>
       </div>
 
       {/* Ledger Table */}
@@ -109,8 +128,32 @@ export default function PaymentsLedgerView({ payments = [], financeAccounts = []
                   No payment transactions logged yet. Click "+ Collect Payment / EMI" when a borrower pays.
                 </td>
               </tr>
+            ) : payments.filter(p => {
+              if (!searchFilter.trim()) return true;
+              const q = searchFilter.toLowerCase();
+              return (
+                p.receiptNo?.toLowerCase().includes(q) ||
+                p.customerName?.toLowerCase().includes(q) ||
+                p.accountId?.toLowerCase().includes(q) ||
+                p.referenceNo?.toLowerCase().includes(q)
+              );
+            }).length === 0 ? (
+              <tr>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--text-dim)' }}>
+                  No matching payment receipts found for "{searchFilter}".
+                </td>
+              </tr>
             ) : (
-              payments.map(p => (
+              payments.filter(p => {
+                if (!searchFilter.trim()) return true;
+                const q = searchFilter.toLowerCase();
+                return (
+                  p.receiptNo?.toLowerCase().includes(q) ||
+                  p.customerName?.toLowerCase().includes(q) ||
+                  p.accountId?.toLowerCase().includes(q) ||
+                  p.referenceNo?.toLowerCase().includes(q)
+                );
+              }).map(p => (
                 <tr key={p.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                   <td style={{ padding: '0.85rem 1rem', fontWeight: 800, color: '#D97706' }}>{p.receiptNo}</td>
                   <td style={{ padding: '0.85rem 1rem', color: 'var(--text-muted)' }}>{new Date(p.timestamp).toLocaleString()}</td>

@@ -17,7 +17,7 @@ import {
   Eye,
   FileCheck
 } from 'lucide-react';
-import { formatCurrency, generateEmiSchedule } from '../utils/financeEngine';
+import { formatCurrency, generateEmiSchedule, addMonths } from '../utils/financeEngine';
 import confetti from 'canvas-confetti';
 
 export default function DisburseLoanModal({
@@ -253,8 +253,7 @@ export default function DisburseLoanModal({
       let balance = principal;
 
       for (let i = 1; i <= months; i++) {
-        const dueDate = new Date(disbursalDate);
-        dueDate.setMonth(dueDate.getMonth() + i);
+        const dueDate = addMonths(disbursalDate, i);
 
         const interestPart = Math.round((balance * monthlyRate) / 100);
         const isLast = i === months;

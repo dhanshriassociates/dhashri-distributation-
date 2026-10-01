@@ -224,11 +224,16 @@ export default function App() {
 
     const app = applications.find(a => a.id === appId);
     if (app) {
+      const cust = customers.find(c => c.id === app.customerId);
       const newAcc = {
         id: `ACC-FIN-${Math.floor(100 + Math.random() * 900)}`,
         applicationId: app.id,
         customerId: app.customerId,
         customerName: app.customerName,
+        customerPhone: cust?.phone || 'N/A',
+        customerAadhaar: cust?.aadhaar || 'N/A',
+        customerPan: cust?.pan || 'N/A',
+        customerPhoto: cust?.photo || null,
         productName: app.productName,
         financedAmount: app.requestedAmount,
         annualRatePct: app.annualRatePct,
@@ -246,6 +251,20 @@ export default function App() {
   const handleRejectApplication = (appId, comment, actorName = 'Admin Officer') => {
     setApplications(prev => prev.map(a => a.id === appId ? { ...a, status: 'Rejected', reviewerComment: comment, reviewedBy: actorName } : a));
     logAuditEvent(actorName, 'APPLICATION_REJECTED', `Application ${appId} (Reason: ${comment})`);
+  };
+
+  // Save Followup Note Handler
+  const handleSaveFollowupNote = (newFollowup) => {
+    setOverdueFollowups(prev => {
+      const existingIdx = prev.findIndex(f => f.accountId === newFollowup.accountId);
+      if (existingIdx >= 0) {
+        const updated = [...prev];
+        updated[existingIdx] = newFollowup;
+        return updated;
+      }
+      return [newFollowup, ...prev];
+    });
+    logAuditEvent(newFollowup.assignedAgent || 'Recovery Officer', 'FOLLOWUP_NOTE_LOGGED', `Account ${newFollowup.accountId} (${newFollowup.customerName}) - ${newFollowup.outcome}`);
   };
 
   // Save Payment Handler
@@ -404,7 +423,11 @@ export default function App() {
 
         {activeView === 'overdue' && (
           <OverdueCollectionsView
+            financeAccounts={financeAccounts}
             overdueFollowups={overdueFollowups}
+            onSaveFollowupNote={handleSaveFollowupNote}
+            onOpenCollectPayment={() => setActiveView('payments')}
+            onOpenPassbook={(acc) => setPassbookAccount(acc)}
           />
         )}
 

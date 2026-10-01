@@ -89,6 +89,13 @@ export default function Customer360View({
   const custFollowups = overdueFollowups.filter(f => custAccounts.some(acc => acc.id === f.accountId));
   const custAudits = auditLogs.filter(l => l.target?.includes(customer?.id) || l.target?.includes(customer?.name));
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const custOverdueEmis = custAccounts.flatMap(acc => 
+    (acc.emiSchedule || []).filter(s => s.status === 'overdue' || (s.status !== 'paid' && s.dueDate && new Date(s.dueDate) < today))
+      .map(s => ({ ...s, accountId: acc.id, productName: acc.productName }))
+  );
+
   const handleVerifyDoc = (docId) => {
     if (onVerifyDocument) {
       onVerifyDocument(customer.id, docId, 'System Admin');
@@ -484,20 +491,59 @@ export default function Customer360View({
       {activeTab === 'overdue' && (
         <div className="glass-panel" style={{ padding: '1.5rem' }}>
           <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', marginBottom: '1.2rem' }}>
-            Overdue Followup Notes
+            Overdue Status & Followup History
           </h3>
-          {custFollowups.length === 0 ? (
+
+          {/* Overdue EMIs Alert */}
+          {custOverdueEmis.length > 0 && (
+            <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', padding: '1.1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.6rem' }}>
+                <AlertTriangle size={18} color="#DC2626" />
+                <strong style={{ color: '#991B1B', fontSize: '0.92rem' }}>
+                  Attention: {custOverdueEmis.length} Installment(s) Currently Past Due
+                </strong>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.84rem' }}>
+                {custOverdueEmis.map((emi, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #FECACA', paddingBottom: '0.3rem' }}>
+                    <span>Account: <strong>{emi.accountId}</strong> (Installment #{emi.installmentNo} due on {emi.dueDate})</span>
+                    <strong style={{ color: '#DC2626' }}>{formatCurrency(emi.emiAmount)}</strong>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: '0.8rem', display: 'flex', justifyContent: 'flex-end' }}>
+                <button onClick={() => onNavigateTo('payments')} className="btn-emerald" style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem' }}>
+                  <Receipt size={14} /> Collect Overdue Payment
+                </button>
+              </div>
+            </div>
+          )}
+
+          {custFollowups.length === 0 && custOverdueEmis.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '2.5rem', color: '#059669', fontWeight: 600 }}>
-              ✓ Clean record! No overdue follow-up cases active for this customer.
+              ✓ Clean record! No overdue installments or recovery follow-up cases active for this customer.
             </div>
           ) : (
-            custFollowups.map(f => (
-              <div key={f.id} style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-                <strong>Overdue Bucket: {f.agingBucket} ({f.overdueDays} Days)</strong>
-                <p style={{ marginTop: '0.4rem', color: '#B91C1C' }}>Amount Due: {formatCurrency(f.amountDue)}</p>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>Notes: {f.notes}</p>
+            <div>
+              <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.8rem' }}>
+                Recovery Call & Contact Logs ({custFollowups.length})
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                {custFollowups.map(f => (
+                  <div key={f.id} style={{ background: '#F8FAFC', border: '1px solid var(--border-subtle)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
+                      <strong style={{ color: '#0F172A' }}>{f.contactMethod || 'Follow-up'}: {f.outcome || 'Note'}</strong>
+                      <span className="badge-status overdue">{f.agingBucket} ({f.overdueDays} Days)</span>
+                    </div>
+                    <p style={{ color: '#DC2626', fontWeight: 700, fontSize: '0.82rem' }}>Amount Due: {formatCurrency(f.amountDue)}</p>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>"{f.notes}"</p>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '0.4rem' }}>
+                      Logged by {f.assignedAgent} on {f.lastContactDate}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))
+            </div>
           )}
         </div>
       )}

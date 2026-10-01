@@ -24,6 +24,17 @@ export function maskBankAccount(acc) {
   return `XXXX${str.slice(-4)}`;
 }
 
+// Safe Month Addition (prevents 31st Jan -> 3rd March overflow)
+export function addMonths(dateInput, months) {
+  const d = new Date(dateInput);
+  const originalDay = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + months);
+  const maxDays = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(originalDay, maxDays));
+  return d;
+}
+
 // EMI Schedule Generator using Reducing Balance or Simple Interest
 export function generateEmiSchedule(principal, annualRatePct, tenureMonths, startDateStr = new Date().toISOString().split('T')[0], calcMode = 'reducing') {
   const schedule = [];
@@ -40,8 +51,7 @@ export function generateEmiSchedule(principal, annualRatePct, tenureMonths, star
     }
 
     for (let i = 1; i <= tenureMonths; i++) {
-      const dueDate = new Date(startDate);
-      dueDate.setMonth(startDate.getMonth() + i);
+      const dueDate = addMonths(startDate, i);
 
       const interestForMonth = balance * monthlyRate;
       const principalForMonth = emi - interestForMonth;
@@ -66,8 +76,7 @@ export function generateEmiSchedule(principal, annualRatePct, tenureMonths, star
     const monthlyPrincipal = principal / tenureMonths;
 
     for (let i = 1; i <= tenureMonths; i++) {
-      const dueDate = new Date(startDate);
-      dueDate.setMonth(startDate.getMonth() + i);
+      const dueDate = addMonths(startDate, i);
       balance = Math.max(0, balance - monthlyPrincipal);
 
       schedule.push({
