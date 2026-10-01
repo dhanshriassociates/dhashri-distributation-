@@ -400,7 +400,81 @@ export async function dbInsertAuditLog(log) {
 }
 
 // ==========================================
-// 7. REALTIME ENTITY MAPPERS
+// 7. STAFF MEMBERS SERVICE
+// ==========================================
+export async function dbFetchStaffMembers() {
+  try {
+    const { data, error } = await supabase
+      .from('staff_members')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    if (!data) return [];
+
+    return data.map(s => mapStaff(s));
+  } catch (err) {
+    console.warn('[Supabase] dbFetchStaffMembers fallback to local cache:', err.message);
+    const local = localStorage.getItem('prd_staff');
+    return local ? JSON.parse(local) : [
+      {
+        id: 'STAFF-101',
+        name: 'Ramesh Verma',
+        phone: '+91 98765 11001',
+        email: 'ramesh.verma@finance.in',
+        role: 'Field Collection Agent',
+        routeArea: 'Sector 1-5 Market Route',
+        monthlyTarget: 100000,
+        status: 'Active',
+        permissions: { canDisburse: true, canCollect: true, canReviewApps: false }
+      },
+      {
+        id: 'STAFF-102',
+        name: 'Suresh Kumar',
+        phone: '+91 98765 22002',
+        email: 'suresh.kumar@finance.in',
+        role: 'Recovery Officer',
+        routeArea: 'Industrial Area Route',
+        monthlyTarget: 150000,
+        status: 'Active',
+        permissions: { canDisburse: false, canCollect: true, canReviewApps: false }
+      }
+    ];
+  }
+}
+
+export async function dbInsertStaffMember(staff) {
+  try {
+    const row = {
+      id: staff.id,
+      name: staff.name,
+      phone: staff.phone,
+      email: staff.email,
+      role: staff.role,
+      route_area: staff.routeArea,
+      monthly_target: staff.monthlyTarget,
+      status: staff.status,
+      permissions: staff.permissions
+    };
+
+    const { error } = await supabase.from('staff_members').upsert(row);
+    if (error) throw error;
+  } catch (err) {
+    console.warn('[Supabase] dbInsertStaffMember warning:', err.message);
+  }
+}
+
+export async function dbDeleteStaffMember(staffId) {
+  try {
+    const { error } = await supabase.from('staff_members').delete().eq('id', staffId);
+    if (error) throw error;
+  } catch (err) {
+    console.warn('[Supabase] dbDeleteStaffMember warning:', err.message);
+  }
+}
+
+// ==========================================
+// 8. REALTIME ENTITY MAPPERS
 // ==========================================
 export function mapCustomer(c) {
   if (!c) return null;
@@ -521,6 +595,26 @@ export function mapAuditLog(l) {
   };
 }
 
+export function mapStaff(s) {
+  if (!s) return null;
+  return {
+    id: s.id,
+    name: s.name,
+    phone: s.phone || 'N/A',
+    email: s.email || '',
+    role: s.role || 'Field Collection Agent',
+    routeArea: s.route_area || 'General Area',
+    monthlyTarget: parseFloat(s.monthly_target) || 50000,
+    status: s.status || 'Active',
+    permissions: s.permissions || {
+      canDisburse: false,
+      canCollect: true,
+      canReviewApps: false
+    },
+    createdAt: s.created_at
+  };
+}
+
 // ==========================================
 // 8. LIVE REALTIME SUBSCRIPTION
 // ==========================================
@@ -544,6 +638,9 @@ export function subscribeToAllRealtime(callbacks = {}) {
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'audit_logs' }, (payload) => {
       if (callbacks.onAuditChange) callbacks.onAuditChange(payload);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_members' }, (payload) => {
+      if (callbacks.onStaffChange) callbacks.onStaffChange(payload);
     })
     .subscribe((status) => {
       if (callbacks.onStatusChange) callbacks.onStatusChange(status);

@@ -9,6 +9,8 @@ import PaymentsLedgerView from './components/PaymentsLedgerView';
 import OverdueCollectionsView from './components/OverdueCollectionsView';
 import RbacPermissionsView from './components/RbacPermissionsView';
 import AuditLogsView from './components/AuditLogsView';
+import DailyCollectionsRouteView from './components/DailyCollectionsRouteView';
+import StaffManagerView from './components/StaffManagerView';
 import DisburseLoanModal from './components/DisburseLoanModal';
 import PassbookModal from './components/PassbookModal';
 
@@ -39,13 +41,17 @@ import {
   dbInsertFollowup,
   dbFetchAuditLogs,
   dbInsertAuditLog,
+  dbFetchStaffMembers,
+  dbInsertStaffMember,
+  dbDeleteStaffMember,
   subscribeToAllRealtime,
   mapCustomer,
   mapFinanceAccount,
   mapPayment,
   mapApplication,
   mapFollowup,
-  mapAuditLog
+  mapAuditLog,
+  mapStaff
 } from './lib/supabaseClient';
 
 export default function App() {
@@ -146,6 +152,34 @@ export default function App() {
     return saved ? JSON.parse(saved) : INITIAL_AUDIT_LOGS;
   });
 
+  const [staffMembers, setStaffMembers] = useState(() => {
+    const saved = localStorage.getItem('prd_staff');
+    return saved ? JSON.parse(saved) : [
+      {
+        id: 'STAFF-101',
+        name: 'Ramesh Verma',
+        phone: '+91 98765 11001',
+        email: 'ramesh.verma@finance.in',
+        role: 'Field Collection Agent',
+        routeArea: 'Sector 1-5 Market Route',
+        monthlyTarget: 100000,
+        status: 'Active',
+        permissions: { canDisburse: true, canCollect: true, canReviewApps: false }
+      },
+      {
+        id: 'STAFF-102',
+        name: 'Suresh Kumar',
+        phone: '+91 98765 22002',
+        email: 'suresh.kumar@finance.in',
+        role: 'Recovery Officer',
+        routeArea: 'Industrial Area Route',
+        monthlyTarget: 150000,
+        status: 'Active',
+        permissions: { canDisburse: false, canCollect: true, canReviewApps: false }
+      }
+    ];
+  });
+
   // Modal States
   const [isDisburseLoanOpen, setIsDisburseLoanOpen] = useState(false);
   const [passbookAccount, setPassbookAccount] = useState(null);
@@ -158,13 +192,14 @@ export default function App() {
         const testRes = await testSupabaseConnection();
         setIsDbConnected(testRes.connected);
 
-        const [dbCusts, dbAccs, dbPays, dbApps, dbFols, dbAuds] = await Promise.all([
+        const [dbCusts, dbAccs, dbPays, dbApps, dbFols, dbAuds, dbStaff] = await Promise.all([
           dbFetchCustomers(),
           dbFetchFinanceAccounts(),
           dbFetchPayments(),
           dbFetchApplications(),
           dbFetchOverdueFollowups(),
-          dbFetchAuditLogs()
+          dbFetchAuditLogs(),
+          dbFetchStaffMembers()
         ]);
 
         if (dbCusts && dbCusts.length > 0) setCustomers(dbCusts);
@@ -173,6 +208,7 @@ export default function App() {
         if (dbApps && dbApps.length > 0) setApplications(dbApps);
         if (dbFols && dbFols.length > 0) setOverdueFollowups(dbFols);
         if (dbAuds && dbAuds.length > 0) setAuditLogs(dbAuds);
+        if (dbStaff && dbStaff.length > 0) setStaffMembers(dbStaff);
       } catch (err) {
         console.warn('Initial cloud DB sync notice:', err);
       } finally {
@@ -281,6 +317,24 @@ export default function App() {
             setAuditLogs(prev => [mapped, ...prev]);
           }
         }
+      },
+      onStaffChange: (payload) => {
+        if (payload.eventType === 'DELETE') {
+          setStaffMembers(prev => prev.filter(s => s.id !== payload.old?.id));
+        } else if (payload.new) {
+          const mapped = mapStaff(payload.new);
+          if (mapped) {
+            setStaffMembers(prev => {
+              const idx = prev.findIndex(s => s.id === mapped.id);
+              if (idx >= 0) {
+                const updated = [...prev];
+                updated[idx] = mapped;
+                return updated;
+              }
+              return [mapped, ...prev];
+            });
+          }
+        }
       }
     });
 
@@ -309,6 +363,32 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('prd_audit_logs', JSON.stringify(auditLogs));
   }, [auditLogs]);
+
+  useEffect(() => {
+    localStorage.setItem('prd_staff', JSON.stringify(staffMembers));
+  }, [staffMembers]);
+
+  // Staff Handlers (Save & Delete with Supabase DB sync)
+  const handleSaveStaffMember = (staff) => {
+    setStaffMembers(prev => {
+      const idx = prev.findIndex(s => s.id === staff.id);
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = staff;
+        return updated;
+      }
+      return [staff, ...prev];
+    });
+    dbInsertStaffMember(staff);
+    logAuditEvent('Admin Officer', 'STAFF_MEMBER_SAVED', `Staff ${staff.id} (${staff.name}) - ${staff.role}`);
+  };
+
+  const handleDeleteStaffMember = (staffId) => {
+    const staff = staffMembers.find(s => s.id === staffId);
+    setStaffMembers(prev => prev.filter(s => s.id !== staffId));
+    dbDeleteStaffMember(staffId);
+    logAuditEvent('Admin Officer', 'STAFF_MEMBER_REMOVED', `Staff ${staffId} (${staff?.name || 'Staff'})`);
+  };
 
   // Helper to add audit log entry (local + Supabase DB)
   const logAuditEvent = (actor, action, target) => {
@@ -616,6 +696,27 @@ export default function App() {
           />
         )}
 
+        {activeView === 'dailyRoute' && (
+          <DailyCollectionsRouteView
+            financeAccounts={financeAccounts}
+            staffMembers={staffMembers}
+            payments={payments}
+            onSavePayment={handleSavePayment}
+            onSaveFollowupNote={handleSaveFollowupNote}
+            onOpenPassbook={(acc) => setPassbookAccount(acc)}
+          />
+        )}
+
+        {activeView === 'staff' && (
+          <StaffManagerView
+            staffMembers={staffMembers}
+            financeAccounts={financeAccounts}
+            payments={payments}
+            onSaveStaffMember={handleSaveStaffMember}
+            onDeleteStaffMember={handleDeleteStaffMember}
+          />
+        )}
+
         {activeView === 'rbac' && (
           <RbacPermissionsView
             roles={INITIAL_ROLES}
@@ -636,6 +737,7 @@ export default function App() {
         onClose={() => setIsDisburseLoanOpen(false)}
         customers={customers}
         financeProducts={INITIAL_FINANCE_PRODUCTS}
+        staffMembers={staffMembers}
         onDisburseLoan={handleDisburseLoan}
       />
 

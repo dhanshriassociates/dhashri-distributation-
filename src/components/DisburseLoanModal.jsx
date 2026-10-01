@@ -25,6 +25,7 @@ export default function DisburseLoanModal({
   onClose,
   customers = [],
   financeProducts = [],
+  staffMembers = [],
   onDisburseLoan
 }) {
   if (!isOpen) return null;
@@ -984,6 +985,29 @@ export default function DisburseLoanModal({
                   onChange={(e) => setDisbursalDate(e.target.value)}
                   className="form-input"
                 />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                  Assigned Recovery Officer / Staff
+                </label>
+                <select
+                  value={assignedOfficer}
+                  onChange={(e) => setAssignedOfficer(e.target.value)}
+                  className="form-select"
+                >
+                  {staffMembers.length > 0 ? (
+                    staffMembers.map(s => (
+                      <option key={s.id} value={s.name}>👤 {s.name} ({s.role})</option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="Ramesh Verma">Ramesh Verma (Field Agent)</option>
+                      <option value="Suresh Kumar">Suresh Kumar (Recovery Officer)</option>
+                      <option value="Admin Officer">Admin Officer</option>
+                    </>
+                  )}
+                </select>
               </div>
             </div>
           </div>

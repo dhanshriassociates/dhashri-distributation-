@@ -111,6 +111,20 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
     ip TEXT DEFAULT '127.0.0.1'
 );
 
+-- 7. Staff & Recovery Officers Table
+CREATE TABLE IF NOT EXISTS public.staff_members (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    phone TEXT,
+    email TEXT,
+    role TEXT DEFAULT 'Field Collection Agent',
+    route_area TEXT,
+    monthly_target NUMERIC DEFAULT 50000,
+    status TEXT DEFAULT 'Active',
+    permissions JSONB DEFAULT '{"canDisburse": false, "canCollect": true, "canReviewApps": false}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =========================================================
 -- ENABLE ROW LEVEL SECURITY (RLS) & ALLOW PUBLIC ACCESS
 -- (For publishable anon client key access)
@@ -122,6 +136,7 @@ ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.overdue_followups ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.staff_members ENABLE ROW LEVEL SECURITY;
 
 -- Permissive policies for anon role (Publishable Key Access)
 CREATE POLICY "Allow public all on customers" ON public.customers FOR ALL TO anon USING (true) WITH CHECK (true);
@@ -130,6 +145,7 @@ CREATE POLICY "Allow public all on payments" ON public.payments FOR ALL TO anon 
 CREATE POLICY "Allow public all on applications" ON public.applications FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public all on overdue_followups" ON public.overdue_followups FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public all on audit_logs" ON public.audit_logs FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public all on staff_members" ON public.staff_members FOR ALL TO anon USING (true) WITH CHECK (true);
 
 -- =========================================================
 -- ENABLE REALTIME BROADCASTING FOR ALL TABLES
@@ -141,3 +157,4 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.payments;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.applications;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.overdue_followups;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.audit_logs;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.staff_members;

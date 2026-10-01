@@ -13,7 +13,9 @@ import {
   AlertTriangle, 
   Sliders, 
   FileText,
-  Bell
+  Bell,
+  CalendarCheck,
+  UserCheck
 } from 'lucide-react';
 
 export default function Header({
@@ -126,15 +128,17 @@ export default function Header({
         <nav style={{ display: 'flex', gap: '0.25rem', background: '#F1F5F9', padding: '0.25rem', borderRadius: 'var(--radius-md)', overflowX: 'auto' }}>
           {[
             { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+            { id: 'dailyRoute', label: "Today's Route", icon: CalendarCheck },
             { id: 'customer360', label: 'Borrowers 360', icon: Users },
+            { id: 'staff', label: 'Staff & Team', icon: UserCheck },
             { id: 'onboarding', label: '+ Onboard', icon: UserPlus },
             { id: 'applications', label: 'Applications', icon: FileCheck },
-              { id: 'payments', label: 'Payments', icon: Receipt },
-              { id: 'overdue', label: 'Overdue Aging', icon: AlertTriangle },
-              { id: 'products', label: 'Products', icon: CreditCard },
-              { id: 'rbac', label: 'RBAC Matrix', icon: Sliders },
-              { id: 'audit', label: 'Audit Logs', icon: FileText }
-            ].map(tab => {
+            { id: 'payments', label: 'Payments', icon: Receipt },
+            { id: 'overdue', label: 'Overdue Aging', icon: AlertTriangle },
+            { id: 'products', label: 'Products', icon: CreditCard },
+            { id: 'rbac', label: 'RBAC Matrix', icon: Sliders },
+            { id: 'audit', label: 'Audit Logs', icon: FileText }
+          ].map(tab => {
               const Icon = tab.icon;
               const isActive = activeView === tab.id;
               return (
