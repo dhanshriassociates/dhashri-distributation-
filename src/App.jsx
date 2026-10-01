@@ -12,6 +12,7 @@ import AuditLogsView from './components/AuditLogsView';
 import DailyCollectionsRouteView from './components/DailyCollectionsRouteView';
 import StaffManagerView from './components/StaffManagerView';
 import UserManagementView from './components/UserManagementView';
+import LoginPage from './components/LoginPage';
 import DisburseLoanModal from './components/DisburseLoanModal';
 import PassbookModal from './components/PassbookModal';
 
@@ -198,6 +199,15 @@ export default function App() {
       try { return JSON.parse(saved); } catch {}
     }
     return INITIAL_APP_USERS[0];
+  });
+
+  // Login Session State (Shows LoginPage when null)
+  const [sessionUser, setSessionUser] = useState(() => {
+    const saved = localStorage.getItem('prd_session_user');
+    if (saved) {
+      try { return JSON.parse(saved); } catch {}
+    }
+    return null; // Prompt login on first visit or after logout
   });
 
   // Modal States
@@ -457,6 +467,24 @@ export default function App() {
     logAuditEvent(user.name, 'USER_SESSION_SIMULATED', `Switched active session to ${user.name} (${user.role})`);
   };
 
+  const handleLoginSuccess = (user) => {
+    setSessionUser(user);
+    setCurrentUser(user);
+    setActiveRole(user.role === 'Admin' ? 'admin' : 'employee');
+    localStorage.setItem('prd_session_user', JSON.stringify(user));
+    localStorage.setItem('prd_current_user', JSON.stringify(user));
+    if (user.allowedModules && user.allowedModules.length > 0 && !user.allowedModules.includes(activeView)) {
+      setActiveView(user.allowedModules[0]);
+    }
+    logAuditEvent(user.name, 'USER_LOGIN_SUCCESS', `User ${user.name} (${user.role}) signed in successfully`);
+  };
+
+  const handleLogout = () => {
+    logAuditEvent(currentUser?.name || 'User', 'USER_LOGOUT', `User ${currentUser?.name} logged out`);
+    setSessionUser(null);
+    localStorage.removeItem('prd_session_user');
+  };
+
   // Staff Handlers (Save & Delete with Supabase DB sync)
   const handleSaveStaffMember = (staff) => {
     setStaffMembers(prev => {
@@ -689,6 +717,16 @@ export default function App() {
     downloadAnchor.remove();
   };
 
+  // If not logged in, render LoginPage
+  if (!sessionUser) {
+    return (
+      <LoginPage
+        appUsers={appUsers}
+        onLoginSuccess={handleLoginSuccess}
+      />
+    );
+  }
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-deep)' }}>
       
@@ -707,6 +745,7 @@ export default function App() {
         currentUser={currentUser}
         appUsers={appUsers}
         onSwitchUser={handleSwitchUser}
+        onLogout={handleLogout}
       />
 
       {/* Main Container */}

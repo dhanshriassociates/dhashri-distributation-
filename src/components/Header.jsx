@@ -15,7 +15,8 @@ import {
   FileText,
   Bell,
   CalendarCheck,
-  UserCheck
+  UserCheck,
+  LogOut
 } from 'lucide-react';
 
 export default function Header({
@@ -31,7 +32,8 @@ export default function Header({
   isDbLoading = false,
   currentUser,
   appUsers = [],
-  onSwitchUser
+  onSwitchUser,
+  onLogout
 }) {
   const roles = [
     { id: 'admin', label: '👑 Admin (Owner)', color: '#4F46E5' },
@@ -246,6 +248,29 @@ export default function Header({
               {auditCount} Audits
             </span>
           </div>
+
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.4rem 0.7rem',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid #FECACA',
+                background: '#FEF2F2',
+                color: '#DC2626',
+                fontSize: '0.76rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title="Sign Out of Session"
+            >
+              <LogOut size={13} /> Exit
+            </button>
+          )}
         </div>
 
       </div>
