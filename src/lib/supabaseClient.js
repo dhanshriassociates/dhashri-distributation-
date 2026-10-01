@@ -1,25 +1,43 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Resolve configuration from Vite or Next.js environment variables, or fallback to provided live keys
+// Resolve configuration strictly from environment variables (local .env or Vercel environment variables)
 export const SUPABASE_URL = 
   import.meta.env?.VITE_SUPABASE_URL || 
   import.meta.env?.NEXT_PUBLIC_SUPABASE_URL || 
-  'https://rbgaitetaugbarzczlot.supabase.co';
+  '';
 
 export const SUPABASE_ANON_KEY = 
   import.meta.env?.VITE_SUPABASE_ANON_KEY || 
   import.meta.env?.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 
-  'sb_publishable_4-2ACPg2f7dHOlfnHzWEIg_rwUP_uRS';
+  '';
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true
-  }
-});
+const isConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+
+export const supabase = isConfigured 
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true
+      }
+    })
+  : {
+      from: () => ({
+        select: async () => ({ data: [], error: new Error('Supabase credentials not configured') }),
+        upsert: async () => ({ error: new Error('Supabase credentials not configured') }),
+        delete: async () => ({ eq: async () => ({ error: new Error('Supabase credentials not configured') }) })
+      }),
+      channel: () => ({
+        on: function() { return this; },
+        subscribe: (cb) => { if (cb) cb('CLOSED'); return this; }
+      }),
+      removeChannel: () => {}
+    };
 
 // Helper to check DB connection status
 export async function testSupabaseConnection() {
+  if (!isConfigured) {
+    return { connected: false, error: 'Supabase credentials not configured in environment.' };
+  }
   try {
     const { data, error } = await supabase.from('customers').select('count', { count: 'exact', head: true });
     if (error && error.code !== 'PGRST116') {
