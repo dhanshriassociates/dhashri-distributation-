@@ -255,7 +255,7 @@ export default function AnalyticsView({
             {formatINR(totalOutstanding)}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: '#0284C7', fontWeight: 600 }}>
-            {activeAccounts.length} Active Accounts Earning Byaj
+            {activeAccounts.length} Active Accounts Earning Interest
           </div>
         </div>
 

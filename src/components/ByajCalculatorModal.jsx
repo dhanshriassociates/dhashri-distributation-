@@ -78,7 +78,7 @@ export default function ByajCalculatorModal({ onClose }) {
           gap: '0.8rem'
         }}>
           <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#FBBF24', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            ⚡ Byaj Calculation Results
+            Interest Calculation Summary
           </h4>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>

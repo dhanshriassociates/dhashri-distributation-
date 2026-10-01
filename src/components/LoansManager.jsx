@@ -52,7 +52,7 @@ export default function LoansManager({
         
         <div>
           <h2 style={{ fontSize: '1.2rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FileSpreadsheet size={22} color="#F59E0B" /> Loans & Byaj Ledger Register
+            <FileSpreadsheet size={22} color="#F59E0B" /> Loans & Interest Ledger Register
           </h2>
           <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
             Track active money lent, monthly interest rates, collaterals, and team agent assignments.
@@ -101,9 +101,9 @@ export default function LoansManager({
             <tr style={{ borderBottom: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.25)', color: 'var(--text-muted)' }}>
               <th style={{ padding: '0.85rem 1rem' }}>Loan ID & Debtor</th>
               <th style={{ padding: '0.85rem 1rem' }}>Principal Lent</th>
-              <th style={{ padding: '0.85rem 1rem' }}>Byaj Rate</th>
-              <th style={{ padding: '0.85rem 1rem' }}>Monthly Byaj Yield</th>
-              <th style={{ padding: '0.85rem 1rem' }}>Total Byaj Collected</th>
+              <th style={{ padding: '0.85rem 1rem' }}>Interest Rate</th>
+              <th style={{ padding: '0.85rem 1rem' }}>Monthly Interest Yield</th>
+              <th style={{ padding: '0.85rem 1rem' }}>Total Interest Collected</th>
               <th style={{ padding: '0.85rem 1rem' }}>Assigned Agent</th>
               <th style={{ padding: '0.85rem 1rem' }}>Collateral Asset</th>
               <th style={{ padding: '0.85rem 1rem' }}>Status / Next Due</th>
@@ -199,7 +199,7 @@ export default function LoansManager({
                           onClick={() => onOpenCollectionForLoan(loan)}
                           className="btn-emerald"
                           style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem' }}
-                          title="Collect Cash / Byaj"
+                          title="Collect Cash / Payment"
                         >
                           <Receipt size={13} /> Collect
                         </button>

@@ -50,7 +50,7 @@ export default function CollectionModal({ loans, initialLoan, teamMembers, onClo
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <Receipt size={22} color="#10B981" />
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Record Cash / Byaj Collection</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Record Cash / Payment Collection</h3>
           </div>
 
           <button onClick={onClose} className="btn-icon" title="Close Modal">
@@ -92,14 +92,14 @@ export default function CollectionModal({ loans, initialLoan, teamMembers, onClo
               fontSize: '0.82rem'
             }}>
               <div>
-                <span style={{ color: 'var(--text-muted)' }}>Byaj Rate:</span>{' '}
+                <span style={{ color: 'var(--text-muted)' }}>Interest Rate:</span>{' '}
                 <strong style={{ color: '#FBBF24' }}>
                   {activeLoan.byajType === 'Monthly % Byaj' ? `${activeLoan.monthlyRatePct}% / mo` : `₹${activeLoan.dailyRateRupees}/day`}
                 </strong>
               </div>
 
               <div>
-                <span style={{ color: 'var(--text-muted)' }}>Suggested Monthly Byaj:</span>{' '}
+                <span style={{ color: 'var(--text-muted)' }}>Suggested Monthly Interest:</span>{' '}
                 <strong style={{ color: '#10B981' }}>{formatINR(suggestedInterest)}</strong>
               </div>
             </div>
@@ -133,7 +133,7 @@ export default function CollectionModal({ loans, initialLoan, teamMembers, onClo
                 onChange={(e) => setCollectionType(e.target.value)}
                 className="form-select"
               >
-                <option value="Byaj Only">Byaj Only (Interest)</option>
+                <option value="Byaj Only">Interest Only</option>
                 <option value="Principal Repayment">Principal Part-Payment</option>
                 <option value="Principal + Byaj">Full Repayment (Principal + Interest)</option>
                 <option value="Late Penalty">Late Payment Fine</option>

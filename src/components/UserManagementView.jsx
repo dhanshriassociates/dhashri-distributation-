@@ -52,11 +52,11 @@ export const AVAILABLE_MODULES = [
   { id: 'applications', label: 'Loan Applications & LOS', desc: 'Credit underwriting workflow, appraisal & loan approval', icon: FileCheck },
   { id: 'payments', label: 'Payments Ledger', desc: 'Receipt logging, interest/principal split & ledger transactions', icon: Receipt },
   { id: 'overdue', label: 'Overdue Collections & NPA', desc: 'Aging buckets, call notes & recovery promises to pay', icon: AlertTriangle },
-  { id: 'byajCalc', label: 'Byaj & EMI Calculator', desc: 'Daily 100-day scheme, monthly flat byaj & reducing EMI quotation', icon: Calculator },
+  { id: 'byajCalc', label: 'Interest & EMI Calculator', desc: 'Daily 100-day scheme, monthly flat interest & reducing EMI quotation', icon: Calculator },
   { id: 'docsVault', label: 'KYC & Legal Document Vault', desc: 'Aadhaar cards, PAN verification, signed promissory notes', icon: FolderCheck },
   { id: 'notifications', label: 'Notifications & Alerts', desc: 'Overdue EMI alerts, KYC pending reminders, upcoming due notifications', icon: Bell },
   { id: 'reports', label: 'Reports & Statements', desc: 'Monthly collection reports, portfolio summary, overdue recovery aging report', icon: ClipboardList },
-  { id: 'products', label: 'Finance Products', desc: 'Daily/Monthly byaj rules & interest rate configurations', icon: CreditCard },
+  { id: 'products', label: 'Finance Products', desc: 'Daily/Monthly interest rules & lending rate configurations', icon: CreditCard },
   { id: 'userManagement', label: 'Admin Panel & Access', desc: 'User management, module permissions and access control', icon: ShieldCheck },
   { id: 'rbac', label: 'RBAC Matrix', desc: 'Static security policies & role matrix overview', icon: Sliders },
   { id: 'audit', label: 'Audit Trail', desc: 'Tamper-evident logs of every transaction & system change', icon: FileText }

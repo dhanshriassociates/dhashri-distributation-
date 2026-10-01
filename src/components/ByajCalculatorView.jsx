@@ -86,10 +86,10 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
             </div>
             <div>
               <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
-                Byaj & EMI Loan Quotation Calculator
+                Interest & EMI Loan Quotation Calculator
               </h2>
               <p style={{ fontSize: '0.78rem', color: '#64748B' }}>
-                Compare Flat monthly byaj, 100-day daily collection schemes, and reducing balance EMI.
+                Compare Flat monthly interest, 100-day daily collection schemes, and reducing balance EMI.
               </p>
             </div>
           </div>
@@ -166,7 +166,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                 textAlign: 'center'
               }}
             >
-              Monthly Flat Byaj (₹2/₹3 Sawaai)
+              Monthly Flat Interest (e.g. 2%-3%/mo)
             </button>
 
             <button
@@ -332,7 +332,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                   Dhanshri Loan Estimate
                 </span>
                 <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFF' }}>
-                  {calcType === 'daily_scheme' ? 'Daily Collection Plan' : calcType === 'monthly_flat' ? 'Monthly Flat Byaj Plan' : 'Reducing Balance Plan'}
+                  {calcType === 'daily_scheme' ? 'Daily Collection Plan' : calcType === 'monthly_flat' ? 'Monthly Flat Interest Plan' : 'Reducing Balance Plan'}
                 </h4>
               </div>
               <span style={{ background: 'rgba(16, 185, 129, 0.2)', border: '1px solid #10B981', color: '#34D399', fontSize: '0.72rem', fontWeight: 800, padding: '0.2rem 0.6rem', borderRadius: '12px' }}>
@@ -343,7 +343,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
             {/* Big Installment Amount */}
             <div style={{ background: 'rgba(255, 255, 255, 0.05)', borderRadius: '12px', padding: '1.2rem', marginBottom: '1.4rem', border: '1px solid rgba(255,255,255,0.08)' }}>
               <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>
-                {installmentFrequency} Collection Amount (Kisht)
+                {installmentFrequency} Installment Amount (EMI)
               </div>
               <div style={{ fontSize: '2.4rem', fontWeight: 900, color: '#34D399', margin: '0.2rem 0' }}>
                 {formatINR(emiAmount)}
@@ -371,7 +371,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '0.4rem' }}>
-                <span style={{ color: '#94A3B8' }}>Total Byaj (Interest Earned):</span>
+                <span style={{ color: '#94A3B8' }}>Total Interest Earned:</span>
                 <span style={{ fontWeight: 800, color: '#FBBF24' }}>+ {formatINR(totalInterest)}</span>
               </div>
 

@@ -57,7 +57,7 @@ export default function Header({
     { id: 'overdue', label: 'Overdue Aging', icon: AlertTriangle },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'calendar', label: 'Due Calendar', icon: Calendar },
-    { id: 'byajCalc', label: 'Byaj Calc', icon: Calculator },
+    { id: 'byajCalc', label: 'Interest Calc', icon: Calculator },
     { id: 'docsVault', label: 'KYC Vault', icon: FolderCheck },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'reports', label: 'Reports', icon: ClipboardList },

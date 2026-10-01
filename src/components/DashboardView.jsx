@@ -188,14 +188,14 @@ export default function DashboardView({
         </div>
       </div>
 
-      {/* ── TODAY'S LIVE CASH FLOW SUMMARY (AAJ KA HISAB-KITAB) ── */}
+      {/* ── TODAY'S LIVE CASH FLOW SUMMARY ── */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
         gap: '1rem',
         marginBottom: '1.4rem'
       }}>
-        {/* 1. Aaj Kitna Aana Hai */}
+        {/* 1. Due Today */}
         <div 
           onClick={() => onNavigateTo('dailyRoute')}
           style={{
@@ -211,7 +211,7 @@ export default function DashboardView({
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Aaj Kitna Aana Hai (Due)
+              Expected Collections (Due Today)
             </span>
             <CalendarCheck size={18} color="#B45309" />
           </div>
@@ -223,7 +223,7 @@ export default function DashboardView({
           </div>
         </div>
 
-        {/* 2. Aaj Kitna Aaya Hai */}
+        {/* 2. Collected Today */}
         <div 
           onClick={() => onNavigateTo('payments')}
           style={{
@@ -239,7 +239,7 @@ export default function DashboardView({
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#065F46', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Aaj Kitna Aaya Hai (Received)
+              Realized Collections (Received Today)
             </span>
             <ArrowDownLeft size={18} color="#047857" />
           </div>
@@ -247,11 +247,11 @@ export default function DashboardView({
             {formatCurrency(todayCollectedAmount)}
           </div>
           <div style={{ fontSize: '0.73rem', color: '#065F46', fontWeight: 600 }}>
-            {todayPayments.length} Payments Collected Today • View Ledger →
+            {todayPayments.length} Payments Received Today • View Ledger →
           </div>
         </div>
 
-        {/* 3. Aaj Kitna Gaya Hai */}
+        {/* 3. Disbursed Today */}
         <div 
           onClick={() => onNavigateTo('customer360')}
           style={{
@@ -267,7 +267,7 @@ export default function DashboardView({
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#3730A3', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Aaj Kitna Gaya Hai (Disbursed)
+              Capital Outflow (Disbursed Today)
             </span>
             <ArrowUpRight size={18} color="#4338CA" />
           </div>
@@ -279,7 +279,7 @@ export default function DashboardView({
           </div>
         </div>
 
-        {/* 4. Aaj Ka Net In-Hand Cash Flow */}
+        {/* 4. Net Daily Cash Flow */}
         <div 
           onClick={() => onNavigateTo('daybook')}
           style={{
@@ -295,7 +295,7 @@ export default function DashboardView({
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.74rem', fontWeight: 800, color: todayNetCashflow >= 0 ? '#065F46' : '#991B1B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Aaj Ka Net In-Hand
+              Net Daily Cash Flow
             </span>
             <Wallet size={18} color={todayNetCashflow >= 0 ? '#059669' : '#DC2626'} />
           </div>
@@ -303,7 +303,7 @@ export default function DashboardView({
             {formatCurrency(todayNetCashflow)}
           </div>
           <div style={{ fontSize: '0.73rem', color: todayNetCashflow >= 0 ? '#065F46' : '#991B1B', fontWeight: 600 }}>
-            {todayNetCashflow >= 0 ? '+ Positive Cashflow' : '- Capital Outflow'} • Open Day-Book →
+            {todayNetCashflow >= 0 ? '+ Positive Cash Flow' : '- Capital Outflow'} • Open Day-Book →
           </div>
         </div>
       </div>
@@ -519,7 +519,7 @@ export default function DashboardView({
             {formatCurrency(totalInterestEarned)}
           </h2>
           <span style={{ fontSize: '0.72rem', color: '#DDD6FE', display: 'block' }}>
-            Realized Byaj Profit • View →
+            Realized Interest Profit • View →
           </span>
         </div>
 

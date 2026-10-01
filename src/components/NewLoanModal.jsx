@@ -107,11 +107,11 @@ export default function NewLoanModal({ customers, teamMembers, activeRole, onClo
 
             <div>
               <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                Byaj Interest Mode
+                Interest Mode
               </label>
               <select value={byajType} onChange={(e) => setByajType(e.target.value)} className="form-select">
-                <option value="Monthly % Byaj">Monthly % Byaj Rate</option>
-                <option value="Daily Roj Byaj">Daily Roj Byaj (Fixed ₹/day)</option>
+                <option value="Monthly % Byaj">Monthly % Interest Rate</option>
+                <option value="Daily Roj Byaj">Daily Fixed Interest (₹/day)</option>
               </select>
             </div>
 
@@ -139,7 +139,7 @@ export default function NewLoanModal({ customers, teamMembers, activeRole, onClo
             ) : (
               <div>
                 <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                  Daily Byaj Rate (₹ / Day)
+                  Daily Interest Rate (₹ / Day)
                 </label>
                 <input
                   type="number"

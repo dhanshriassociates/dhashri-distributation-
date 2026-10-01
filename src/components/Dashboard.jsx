@@ -104,10 +104,10 @@ export default function Dashboard({
           </p>
         </div>
 
-        {/* Metric 2: Monthly Byaj Income Expected */}
+        {/* Metric 2: Monthly Interest Income Expected */}
         <div className="glass-panel" style={{ padding: '1.3rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.6rem' }}>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>EXPECTED MONTHLY BYAJ</span>
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>EXPECTED MONTHLY INTEREST</span>
             <TrendingUp size={20} color="#F59E0B" />
           </div>
           <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#FBBF24' }}>{formatINR(expectedMonthlyByaj)}</h2>
@@ -119,7 +119,7 @@ export default function Dashboard({
         {/* Metric 3: Total Interest Collected */}
         <div className="glass-panel" style={{ padding: '1.3rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.6rem' }}>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>ALL-TIME BYAJ EARNED</span>
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>ALL-TIME INTEREST EARNED</span>
             <CheckCircle2 size={20} color="#3B82F6" />
           </div>
           <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#60A5FA' }}>{formatINR(totalCollectedByajAllTime)}</h2>
