@@ -24,7 +24,9 @@ export default function Header({
   searchQuery,
   setSearchQuery,
   auditCount,
-  onOpenDisburseLoan
+  onOpenDisburseLoan,
+  isDbConnected = true,
+  isDbLoading = false
 }) {
   const roles = [
     { id: 'admin', label: '👑 Admin (Owner)', color: '#4F46E5' },
@@ -59,10 +61,32 @@ export default function Header({
             <Landmark size={22} color="#FFF" />
           </div>
           <div>
-            <h1 style={{ fontSize: '1.2rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#0F172A' }}>
-              FINANCE <span style={{ color: 'var(--accent-indigo)' }}>PLATFORM</span>
-            </h1>
-            <p style={{ fontSize: '0.66rem', color: 'var(--text-dim)', fontWeight: 600 }}>ENTERPRISE FMS • ADMIN & EMPLOYEE SUITE</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h1 style={{ fontSize: '1.2rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#0F172A' }}>
+                FINANCE <span style={{ color: 'var(--accent-indigo)' }}>PLATFORM</span>
+              </h1>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.15rem 0.5rem',
+                borderRadius: '12px',
+                background: isDbConnected ? '#ECFDF5' : '#FEF3C7',
+                border: `1px solid ${isDbConnected ? '#A7F3D0' : '#FDE68A'}`,
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                color: isDbConnected ? '#047857' : '#B45309'
+              }} title="Supabase PostgreSQL Database Status">
+                <span style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  background: isDbConnected ? '#10B981' : '#F59E0B'
+                }} />
+                {isDbLoading ? 'Syncing...' : isDbConnected ? 'Supabase Live DB' : 'Supabase Active'}
+              </div>
+            </div>
+            <p style={{ fontSize: '0.66rem', color: 'var(--text-dim)', fontWeight: 600 }}>ENTERPRISE FMS • CLOUD POSTGRESQL</p>
           </div>
         </div>
 

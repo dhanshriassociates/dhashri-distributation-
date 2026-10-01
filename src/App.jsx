@@ -25,11 +25,28 @@ import {
 } from './data/prdDataset';
 
 import { generateEmiSchedule } from './utils/financeEngine';
+import { 
+  testSupabaseConnection,
+  dbFetchCustomers,
+  dbInsertCustomer,
+  dbFetchFinanceAccounts,
+  dbInsertFinanceAccount,
+  dbFetchPayments,
+  dbInsertPayment,
+  dbFetchApplications,
+  dbInsertApplication,
+  dbFetchOverdueFollowups,
+  dbInsertFollowup,
+  dbFetchAuditLogs,
+  dbInsertAuditLog
+} from './lib/supabaseClient';
 
 export default function App() {
   const [activeRole, setActiveRole] = useState('admin'); // admin, employee
   const [activeView, setActiveView] = useState('dashboard'); // dashboard, customer360, onboarding, applications, payments, overdue, products, rbac, audit
   const [searchQuery, setSearchQuery] = useState('');
+  const [isDbConnected, setIsDbConnected] = useState(true);
+  const [isDbLoading, setIsDbLoading] = useState(false);
 
   // Clean Real-Data Purge Flag (Removes old mock items from localStorage)
   useEffect(() => {
@@ -126,7 +143,40 @@ export default function App() {
   const [isDisburseLoanOpen, setIsDisburseLoanOpen] = useState(false);
   const [passbookAccount, setPassbookAccount] = useState(null);
 
-  // LocalStorage Sync
+  // Initial Supabase Cloud Database Hydration
+  useEffect(() => {
+    async function syncFromSupabase() {
+      setIsDbLoading(true);
+      try {
+        const testRes = await testSupabaseConnection();
+        setIsDbConnected(testRes.connected);
+
+        const [dbCusts, dbAccs, dbPays, dbApps, dbFols, dbAuds] = await Promise.all([
+          dbFetchCustomers(),
+          dbFetchFinanceAccounts(),
+          dbFetchPayments(),
+          dbFetchApplications(),
+          dbFetchOverdueFollowups(),
+          dbFetchAuditLogs()
+        ]);
+
+        if (dbCusts && dbCusts.length > 0) setCustomers(dbCusts);
+        if (dbAccs && dbAccs.length > 0) setFinanceAccounts(dbAccs);
+        if (dbPays && dbPays.length > 0) setPayments(dbPays);
+        if (dbApps && dbApps.length > 0) setApplications(dbApps);
+        if (dbFols && dbFols.length > 0) setOverdueFollowups(dbFols);
+        if (dbAuds && dbAuds.length > 0) setAuditLogs(dbAuds);
+      } catch (err) {
+        console.warn('Initial cloud DB sync notice:', err);
+      } finally {
+        setIsDbLoading(false);
+      }
+    }
+
+    syncFromSupabase();
+  }, []);
+
+  // LocalStorage Cache (Dual resilience & offline safety)
   useEffect(() => {
     localStorage.setItem('prd_customers', JSON.stringify(customers));
   }, [customers]);
@@ -147,7 +197,7 @@ export default function App() {
     localStorage.setItem('prd_audit_logs', JSON.stringify(auditLogs));
   }, [auditLogs]);
 
-  // Helper to add audit log entry
+  // Helper to add audit log entry (local + Supabase DB)
   const logAuditEvent = (actor, action, target) => {
     const newLog = {
       id: `aud-${Date.now()}`,
@@ -158,25 +208,29 @@ export default function App() {
       ip: '127.0.0.1'
     };
     setAuditLogs(prev => [newLog, ...prev]);
+    dbInsertAuditLog(newLog);
   };
 
-  // Direct Loan Disbursal Handler (Fast Track with Aadhaar & PAN Intake)
+  // Direct Loan Disbursal Handler (Saves customer & finance account to Supabase DB)
   const handleDisburseLoan = ({ isNewCustomer, customer, account }) => {
     if (isNewCustomer && customer) {
       setCustomers(prev => [customer, ...prev]);
+      dbInsertCustomer(customer);
       logAuditEvent(account.assignedOfficer || 'System Officer', 'CUSTOMER_ONBOARDED_WITH_KYC', `Customer ${customer.id} (${customer.name}) - Aadhaar: ${customer.aadhaar}, PAN: ${customer.pan}`);
     }
 
     setFinanceAccounts(prev => [account, ...prev]);
+    dbInsertFinanceAccount(account);
     logAuditEvent(account.assignedOfficer || 'System Officer', 'CAPITAL_DISBURSED', `Account ${account.id} - ₹${account.financedAmount} to ${account.customerName}`);
 
     // Auto open Passbook statement for instant view/print
     setPassbookAccount(account);
   };
 
-  // Onboarding Customer Handler
+  // Onboarding Customer Handler (Saves customer to Supabase DB)
   const handleSaveCustomer = (newCustomer) => {
     setCustomers(prev => [newCustomer, ...prev]);
+    dbInsertCustomer(newCustomer);
     logAuditEvent('System User', 'CUSTOMER_ONBOARDED', `Customer ${newCustomer.id} (${newCustomer.name})`);
   };
 
@@ -186,11 +240,13 @@ export default function App() {
       if (c.id === customerId) {
         const updatedDocs = (c.documents || []).map(d => d.id === docId ? { ...d, status: 'Verified', verifiedBy: actorName } : d);
         const allVerified = updatedDocs.every(d => d.status === 'Verified');
-        return {
+        const updated = {
           ...c,
           documents: updatedDocs,
           kycStatus: allVerified ? 'Verified' : 'Under Review'
         };
+        dbInsertCustomer(updated);
+        return updated;
       }
       return c;
     }));
@@ -202,11 +258,13 @@ export default function App() {
     setCustomers(prev => prev.map(c => {
       if (c.id === customerId) {
         const updatedDocs = (c.documents || []).map(d => d.id === docId ? { ...d, status: 'Rejected', rejectionReason: reason, verifiedBy: actorName } : d);
-        return {
+        const updated = {
           ...c,
           documents: updatedDocs,
           kycStatus: 'Rejected'
         };
+        dbInsertCustomer(updated);
+        return updated;
       }
       return c;
     }));
@@ -216,14 +274,17 @@ export default function App() {
   // Application Handlers
   const handleSaveApplication = (newApp) => {
     setApplications(prev => [newApp, ...prev]);
+    dbInsertApplication(newApp);
     logAuditEvent('Loan Officer', 'APPLICATION_SUBMITTED', `Application ${newApp.id} for ${newApp.customerName}`);
   };
 
   const handleApproveApplication = (appId, comment, actorName = 'Admin Officer') => {
-    setApplications(prev => prev.map(a => a.id === appId ? { ...a, status: 'Disbursed', reviewerComment: comment, reviewedBy: actorName } : a));
+    const updatedApps = applications.map(a => a.id === appId ? { ...a, status: 'Disbursed', reviewerComment: comment, reviewedBy: actorName } : a);
+    setApplications(updatedApps);
 
     const app = applications.find(a => a.id === appId);
     if (app) {
+      dbInsertApplication({ ...app, status: 'Disbursed', reviewerComment: comment, reviewedBy: actorName });
       const cust = customers.find(c => c.id === app.customerId);
       const newAcc = {
         id: `ACC-FIN-${Math.floor(100 + Math.random() * 900)}`,
@@ -244,16 +305,21 @@ export default function App() {
         emiSchedule: generateEmiSchedule(app.requestedAmount, app.annualRatePct, app.tenureMonths, new Date().toISOString().split('T')[0], 'reducing')
       };
       setFinanceAccounts(prev => [newAcc, ...prev]);
+      dbInsertFinanceAccount(newAcc);
       logAuditEvent(actorName, 'APPLICATION_APPROVED_AND_DISBURSED', `Application ${appId} -> Account ${newAcc.id}`);
     }
   };
 
   const handleRejectApplication = (appId, comment, actorName = 'Admin Officer') => {
     setApplications(prev => prev.map(a => a.id === appId ? { ...a, status: 'Rejected', reviewerComment: comment, reviewedBy: actorName } : a));
+    const app = applications.find(a => a.id === appId);
+    if (app) {
+      dbInsertApplication({ ...app, status: 'Rejected', reviewerComment: comment, reviewedBy: actorName });
+    }
     logAuditEvent(actorName, 'APPLICATION_REJECTED', `Application ${appId} (Reason: ${comment})`);
   };
 
-  // Save Followup Note Handler
+  // Save Followup Note Handler (Saves to Supabase DB)
   const handleSaveFollowupNote = (newFollowup) => {
     setOverdueFollowups(prev => {
       const existingIdx = prev.findIndex(f => f.accountId === newFollowup.accountId);
@@ -264,14 +330,16 @@ export default function App() {
       }
       return [newFollowup, ...prev];
     });
+    dbInsertFollowup(newFollowup);
     logAuditEvent(newFollowup.assignedAgent || 'Recovery Officer', 'FOLLOWUP_NOTE_LOGGED', `Account ${newFollowup.accountId} (${newFollowup.customerName}) - ${newFollowup.outcome}`);
   };
 
-  // Save Payment Handler
+  // Save Payment Handler (Saves payment & updates account in Supabase DB)
   const handleSavePayment = (newPayment) => {
     setPayments(prev => [newPayment, ...prev]);
+    dbInsertPayment(newPayment);
 
-    // Update account EMI schedule status
+    // Update account EMI schedule status in state & Supabase DB
     setFinanceAccounts(prev => prev.map(acc => {
       if (acc.id === newPayment.accountId) {
         const updatedSchedule = (acc.emiSchedule || []).map(s => {
@@ -281,11 +349,13 @@ export default function App() {
           return s;
         });
         const allPaid = updatedSchedule.length > 0 && updatedSchedule.every(s => s.status === 'paid');
-        return {
+        const updatedAcc = {
           ...acc,
           emiSchedule: updatedSchedule,
           status: allPaid ? 'Closed' : acc.status
         };
+        dbInsertFinanceAccount(updatedAcc);
+        return updatedAcc;
       }
       return acc;
     }));
@@ -350,6 +420,8 @@ export default function App() {
         setSearchQuery={setSearchQuery}
         auditCount={auditLogs.length}
         onOpenDisburseLoan={() => setIsDisburseLoanOpen(true)}
+        isDbConnected={isDbConnected}
+        isDbLoading={isDbLoading}
       />
 
       {/* Main Container */}
