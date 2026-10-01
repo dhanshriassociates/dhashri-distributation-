@@ -6,8 +6,8 @@ export default function ByajCalculatorModal({ onClose }) {
   const [calcMode, setCalcMode] = useState('fix_total'); // 'fix_total' or 'monthly_percent'
   
   // Fix Total Specific State
-  const [fixPrincipal, setFixPrincipal] = useState(85000);
-  const [fixTarget, setFixTarget] = useState(100000);
+  const [fixPrincipal, setFixPrincipal] = useState(50000);
+  const [fixTarget, setFixTarget] = useState(60000);
   const [fixFrequency, setFixFrequency] = useState('daily');
   const [fixKistAmount, setFixKistAmount] = useState(1000);
 
@@ -57,7 +57,7 @@ export default function ByajCalculatorModal({ onClose }) {
               cursor: 'pointer'
             }}
           >
-            🌟 Fixed Total Return (₹85k ➔ ₹100k)
+            Fixed Total Return Scheme
           </button>
           <button
             type="button"

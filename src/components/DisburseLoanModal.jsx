@@ -62,15 +62,15 @@ export default function DisburseLoanModal({
   const [collateralDoc, setCollateralDoc] = useState({ fileName: '', fileData: '', uploadedAt: null });
 
   // Loan Financial Terms
-  const [loanAmount, setLoanAmount] = useState(85000);
+  const [loanAmount, setLoanAmount] = useState(50000);
   const [interestScheme, setInterestScheme] = useState('fix_total'); // fix_total, monthly_percent, daily_fixed, reducing_emi, flat_emi
   
   // Fix Total Repayment Scheme Specific States
-  const [totalReturnTarget, setTotalReturnTarget] = useState(100000); // e.g. ₹85,000 given -> ₹1,00,000 return
+  const [totalReturnTarget, setTotalReturnTarget] = useState(60000);
   const [fixFrequency, setFixFrequency] = useState('daily'); // 'daily', 'weekly', 'monthly'
-  const [fixKistMode, setFixKistMode] = useState('by_amount'); // 'by_amount' (e.g. ₹1,000/day) or 'by_count' (e.g. 100 days)
+  const [fixKistMode, setFixKistMode] = useState('by_amount'); // 'by_amount' or 'by_count'
   const [fixInstallmentAmount, setFixInstallmentAmount] = useState(1000);
-  const [fixTotalCount, setFixTotalCount] = useState(100);
+  const [fixTotalCount, setFixTotalCount] = useState(60);
 
   // Standard Interest Schemes States
   const [monthlyInterestRate, setMonthlyInterestRate] = useState(2.0); // 2% per month
@@ -891,11 +891,11 @@ export default function DisburseLoanModal({
                   className="form-select"
                   style={{ fontWeight: 700, color: interestScheme === 'fix_total' ? '#059669' : '#1E293B', background: interestScheme === 'fix_total' ? '#ECFDF5' : '#FFF' }}
                 >
-                  <option value="fix_total">🌟 Fixed Total Return (e.g. ₹85k Disbursed ➔ ₹100k Target)</option>
-                  <option value="monthly_percent">Monthly % Interest (e.g. 2% / month = 24% p.a.)</option>
+                  <option value="fix_total">Fixed Total Return Scheme</option>
+                  <option value="monthly_percent">Monthly % Interest Rate</option>
                   <option value="daily_fixed">Daily Fixed Interest (₹ / day)</option>
-                  <option value="reducing_emi">Reducing Balance Bank EMI (% p.a.)</option>
-                  <option value="flat_emi">Flat Rate EMI (% p.a.)</option>
+                  <option value="reducing_emi">Reducing Balance Bank EMI</option>
+                  <option value="flat_emi">Flat Rate EMI</option>
                 </select>
               </div>
             </div>

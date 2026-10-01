@@ -120,7 +120,7 @@ export default function NewLoanModal({ customers, teamMembers, activeRole, onClo
                 Interest Mode & Scheme
               </label>
               <select value={byajType} onChange={(e) => setByajType(e.target.value)} className="form-select" style={{ fontWeight: 700 }}>
-                <option value="Fix Total Wapsi">🌟 Fixed Total Return (e.g. ₹85k Disbursed ➔ ₹100k Target)</option>
+                <option value="Fix Total Wapsi">Fixed Total Return Scheme</option>
                 <option value="Monthly % Byaj">Monthly % Interest Rate</option>
                 <option value="Daily Roj Byaj">Daily Fixed Interest (₹/day)</option>
               </select>

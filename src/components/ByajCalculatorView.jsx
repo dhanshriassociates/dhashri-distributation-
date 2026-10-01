@@ -22,13 +22,13 @@ import { formatCurrency } from '../utils/financeEngine';
 export default function ByajCalculatorView({ onOpenDisburseLoan }) {
   const [calcType, setCalcType] = useState('fix_total'); // 'fix_total', 'monthly_flat', 'daily_scheme', 'reducing_emi'
   
-  // Fix Total Specific State (e.g. ₹85,000 given -> ₹1,00,000 return)
-  const [principal, setPrincipal] = useState(85000);
-  const [fixTargetReturn, setFixTargetReturn] = useState(100000);
+  // Fix Total Specific State
+  const [principal, setPrincipal] = useState(50000);
+  const [fixTargetReturn, setFixTargetReturn] = useState(60000);
   const [fixFrequency, setFixFrequency] = useState('daily'); // 'daily', 'weekly', 'monthly'
   const [fixKistMode, setFixKistMode] = useState('by_amount'); // 'by_amount', 'by_count'
   const [fixInstallmentAmount, setFixInstallmentAmount] = useState(1000);
-  const [fixTotalCount, setFixTotalCount] = useState(100);
+  const [fixTotalCount, setFixTotalCount] = useState(60);
 
   // Standard Interest Schemes State
   const [ratePct, setRatePct] = useState(2.0); // 2% per month
@@ -192,7 +192,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
           {/* Scheme Switcher Tabs */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem', marginBottom: '1.4rem' }}>
             <button
-              onClick={() => { setCalcType('fix_total'); setPrincipal(85000); setFixTargetReturn(100000); }}
+              onClick={() => { setCalcType('fix_total'); setPrincipal(50000); setFixTargetReturn(60000); }}
               style={{
                 padding: '0.65rem 0.5rem',
                 borderRadius: '8px',
@@ -205,7 +205,7 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                 textAlign: 'center'
               }}
             >
-              🌟 Fixed Total Return (₹85k ➔ ₹100k)
+              Fixed Total Return Scheme
             </button>
 
             <button
@@ -276,14 +276,15 @@ export default function ByajCalculatorView({ onOpenDisburseLoan }) {
                 />
               </div>
               <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.4rem' }}>
-                {[10000, 25000, 50000, 85000, 100000, 200000].map(amt => (
+                {[10000, 25000, 50000, 100000, 200000, 500000].map(amt => (
                   <button
                     key={amt}
                     type="button"
                     onClick={() => {
                       setPrincipal(amt);
-                      if (calcType === 'fix_total' && amt === 85000) setFixTargetReturn(100000);
-                      else if (calcType === 'fix_total' && amt === 50000) setFixTargetReturn(60000);
+                      if (calcType === 'fix_total') {
+                        setFixTargetReturn(Math.round(amt * 1.2));
+                      }
                     }}
                     style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem', background: '#F1F5F9', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, color: '#475569' }}
                   >

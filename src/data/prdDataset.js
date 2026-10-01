@@ -55,8 +55,8 @@ export const INITIAL_FINANCE_PRODUCTS = [
   },
   {
     id: 'prod-104',
-    name: 'Fix Total Wapsi Market Loan (Daily/Weekly Kist)',
-    code: 'FTW-04',
+    name: 'Fixed Total Return Scheme (Daily / Weekly / Monthly)',
+    code: 'FTR-04',
     minAmount: 10000,
     maxAmount: 1000000,
     annualRatePct: 18.0,
