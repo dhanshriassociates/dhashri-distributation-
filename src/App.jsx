@@ -162,8 +162,22 @@ export default function App() {
   });
 
   const [auditLogs, setAuditLogs] = useState(() => {
+    // Audit logs are permanent — survive data resets
+    // Check permanent key first, then fallback to regular key
+    const savedPermanent = localStorage.getItem('prd_audit_logs_permanent');
+    if (savedPermanent) {
+      try { return JSON.parse(savedPermanent); } catch {}
+    }
     const saved = localStorage.getItem('prd_audit_logs');
-    return saved ? JSON.parse(saved) : INITIAL_AUDIT_LOGS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Migrate to permanent key
+        localStorage.setItem('prd_audit_logs_permanent', JSON.stringify(parsed));
+        return parsed;
+      } catch {}
+    }
+    return INITIAL_AUDIT_LOGS;
   });
 
   const [staffMembers, setStaffMembers] = useState(() => {
@@ -422,7 +436,10 @@ export default function App() {
   }, [payments]);
 
   useEffect(() => {
-    localStorage.setItem('prd_audit_logs', JSON.stringify(auditLogs));
+    // Save to BOTH keys — regular and permanent (permanent survives resets)
+    const logsJson = JSON.stringify(auditLogs);
+    localStorage.setItem('prd_audit_logs', logsJson);
+    localStorage.setItem('prd_audit_logs_permanent', logsJson);
   }, [auditLogs]);
 
   useEffect(() => {
@@ -682,23 +699,43 @@ export default function App() {
 
   // Reset to Clean Data (Zero Dummy Entries)
   const handleResetData = () => {
-    if (confirm('Are you sure you want to reset all data and start completely fresh? All entries will be cleared.')) {
+    if (confirm('Are you sure you want to reset all loan data and start fresh? Audit logs will be preserved.')) {
+      // Save current audit logs BEFORE clearing anything
+      const existingAuditLogs = [...auditLogs];
+
       setCustomers([]);
       setApplications([]);
       setFinanceAccounts([]);
       setPayments([]);
       setOverdueFollowups([]);
-      setAuditLogs([
-        {
-          id: `aud-reset-${Date.now()}`,
-          actor: 'System Admin',
-          action: 'SYSTEM_RESET_CLEAN',
-          target: 'Database reset to 0 entries (Clean Real Data Mode)',
-          timestamp: new Date().toISOString(),
-          ip: '127.0.0.1'
+
+      // Create reset event log entry
+      const resetLogEntry = {
+        id: `aud-reset-${Date.now()}`,
+        actor: currentUser?.name || 'System Admin',
+        action: 'SYSTEM_RESET_CLEAN',
+        target: 'Loan data reset to 0 entries — Audit logs preserved permanently',
+        timestamp: new Date().toISOString(),
+        ip: '127.0.0.1'
+      };
+
+      // Preserved audit logs = all existing + new reset entry
+      const preservedLogs = [resetLogEntry, ...existingAuditLogs];
+      setAuditLogs(preservedLogs);
+
+      // Clear all localStorage EXCEPT audit logs
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && !key.includes('audit_logs')) {
+          keysToRemove.push(key);
         }
-      ]);
-      localStorage.clear();
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+
+      // Re-save audit logs immediately so they survive
+      localStorage.setItem('prd_audit_logs', JSON.stringify(preservedLogs));
+      localStorage.setItem('prd_audit_logs_permanent', JSON.stringify(preservedLogs));
       localStorage.setItem('fms_real_data_clean_v2', 'true');
     }
   };
@@ -765,6 +802,7 @@ export default function App() {
             financeAccounts={financeAccounts}
             payments={payments}
             overdueFollowups={overdueFollowups}
+            auditLogs={auditLogs}
             currentUser={currentUser}
             staffMembers={staffMembers}
             onNavigateTo={setActiveView}
@@ -940,6 +978,13 @@ export default function App() {
         {activeView === 'audit' && (
           <AuditLogsView
             auditLogs={auditLogs}
+            onClearAuditLogs={() => {
+              if (window.confirm('Permanently delete ALL audit logs? This cannot be undone.')) {
+                setAuditLogs([]);
+                localStorage.removeItem('prd_audit_logs');
+                localStorage.removeItem('prd_audit_logs_permanent');
+              }
+            }}
           />
         )}
       </main>
