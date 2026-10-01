@@ -249,86 +249,14 @@ export default function LoginPage({
                 <>Sign In to Dashboard <ArrowRight size={16} /></>
               )}
             </button>
-          </form>
-        </div>
 
-        {/* Divider */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0 2rem' }}>
-          <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }} />
-          <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 600, whiteSpace: 'nowrap' }}>
-            ⚡ 1-CLICK FAST LOGIN (Testing)
-          </span>
-          <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }} />
-        </div>
-
-        {/* Fast Login Buttons */}
-        <div style={{ padding: '1rem 2rem 1.8rem 2rem', display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
-          {adminUser && (
-            <button
-              className="fast-btn"
-              type="button"
-              onClick={() => handleFastLogin(adminUser)}
-              style={{
-                width: '100%', padding: '0.65rem 1rem',
-                borderRadius: '10px', border: '1.5px solid #4F46E5',
-                background: 'linear-gradient(135deg, #EEF2FF, #E0E7FF)',
-                color: '#3730A3', fontSize: '0.82rem', fontWeight: 700,
-                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.6rem',
-                transition: 'all 0.2s ease', textAlign: 'left'
-              }}
-            >
-              <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <UserCheck size={15} color="#FFF" />
+            <div style={{ textAlign: 'center', marginTop: '1.2rem', paddingTop: '1rem', borderTop: '1px solid #E2E8F0', fontSize: '0.74rem', color: '#64748B' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', color: '#059669', fontWeight: 700, marginBottom: '0.3rem' }}>
+                <ShieldCheck size={14} /> 256-Bit Encrypted • Supabase Cloud PostgreSQL
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 800 }}>Admin — {adminUser.name}</div>
-                <div style={{ fontSize: '0.7rem', color: '#6366F1', fontWeight: 600 }}>{adminUser.allowedModules?.length || 17} Modules · Full Access</div>
-              </div>
-              <span style={{ fontSize: '0.7rem', background: '#4F46E5', color: '#FFF', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: 700 }}>Admin</span>
-            </button>
-          )}
-
-          {staffUsers.map((user, i) => {
-            const roleColors = [
-              { border: '#059669', bgFrom: '#ECFDF5', bgTo: '#D1FAE5', text: '#065F46', sub: '#059669', badge: '#059669' },
-              { border: '#D97706', bgFrom: '#FFFBEB', bgTo: '#FEF3C7', text: '#92400E', sub: '#D97706', badge: '#D97706' },
-              { border: '#0284C7', bgFrom: '#F0F9FF', bgTo: '#E0F2FE', text: '#075985', sub: '#0284C7', badge: '#0284C7' },
-            ];
-            const c = roleColors[i % 3];
-            const roleShort = user.role?.split(' ').map(w => w[0]).join('') || 'ST';
-            return (
-              <button
-                key={user.id}
-                className="fast-btn"
-                type="button"
-                onClick={() => handleFastLogin(user)}
-                style={{
-                  width: '100%', padding: '0.65rem 1rem',
-                  borderRadius: '10px', border: `1.5px solid ${c.border}`,
-                  background: `linear-gradient(135deg, ${c.bgFrom}, ${c.bgTo})`,
-                  color: c.text, fontSize: '0.82rem', fontWeight: 700,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.6rem',
-                  transition: 'all 0.2s ease', textAlign: 'left'
-                }}
-              >
-                <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: c.badge, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#FFF', fontWeight: 800, fontSize: '0.65rem' }}>
-                  {roleShort}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 800 }}>{user.name}</div>
-                  <div style={{ fontSize: '0.7rem', color: c.sub, fontWeight: 600 }}>{user.role} · {user.allowedModules?.length || 0} Modules</div>
-                </div>
-                <span style={{ fontSize: '0.7rem', background: c.badge, color: '#FFF', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: 700 }}>Login</span>
-              </button>
-            );
-          })}
-
-          {/* Security Footer */}
-          <div style={{ textAlign: 'center', marginTop: '0.5rem', fontSize: '0.7rem', color: '#94A3B8' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', color: '#059669', fontWeight: 700 }}>
-              <ShieldCheck size={13} /> 256-Bit Encrypted • Supabase Cloud PostgreSQL
+              <div>Authorized personnel only • All access attempts are audit-logged</div>
             </div>
-          </div>
+          </form>
         </div>
 
       </div>

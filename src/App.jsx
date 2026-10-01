@@ -182,30 +182,16 @@ export default function App() {
 
   const [staffMembers, setStaffMembers] = useState(() => {
     const saved = localStorage.getItem('prd_staff');
-    return saved ? JSON.parse(saved) : [
-      {
-        id: 'STAFF-101',
-        name: 'Ramesh Verma',
-        phone: '+91 98765 11001',
-        email: 'ramesh.verma@finance.in',
-        role: 'Field Collection Agent',
-        routeArea: 'Sector 1-5 Market Route',
-        monthlyTarget: 100000,
-        status: 'Active',
-        permissions: { canDisburse: true, canCollect: true, canReviewApps: false }
-      },
-      {
-        id: 'STAFF-102',
-        name: 'Suresh Kumar',
-        phone: '+91 98765 22002',
-        email: 'suresh.kumar@finance.in',
-        role: 'Recovery Officer',
-        routeArea: 'Industrial Area Route',
-        monthlyTarget: 150000,
-        status: 'Active',
-        permissions: { canDisburse: false, canCollect: true, canReviewApps: false }
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.some && parsed.some(s => s.id === 'STAFF-101')) return [];
+        return parsed;
+      } catch {
+        return [];
       }
-    ];
+    }
+    return [];
   });
 
   // System Users & Module Permissions States

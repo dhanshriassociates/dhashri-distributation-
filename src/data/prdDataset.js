@@ -1,8 +1,8 @@
 import { generateEmiSchedule } from '../utils/financeEngine';
 
 export const INITIAL_ROLES = [
-  { id: 'admin', name: '👑 Admin (Owner)', scope: 'Organization-wide Full Control', description: 'Complete system authority, loan disbursal, credit limits, interest configuration & finance analytics' },
-  { id: 'employee', name: '👔 Employee / Loan Officer', scope: 'Field Operations & Disbursals', description: 'Customer onboarding, KYC document collection, loan initiation, and payment receipts recording' }
+  { id: 'admin', name: 'Admin (Owner)', scope: 'Organization-wide Full Control', description: 'Complete system authority, loan disbursal, credit limits, interest configuration & finance analytics' },
+  { id: 'employee', name: 'Employee / Loan Officer', scope: 'Field Operations & Disbursals', description: 'Customer onboarding, KYC document collection, loan initiation, and payment receipts recording' }
 ];
 
 export const INITIAL_PERMISSIONS_MATRIX = [

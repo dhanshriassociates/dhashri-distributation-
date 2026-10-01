@@ -497,7 +497,7 @@ export async function dbDeleteStaffMember(staffId) {
 export const INITIAL_APP_USERS = [
   {
     id: 'USR-001',
-    name: 'Admin Master (Owner)',
+    name: 'Admin Master',
     email: 'admin@dhanshri.com',
     phone: '+91 98765 43210',
     role: 'Admin',
@@ -505,7 +505,9 @@ export const INITIAL_APP_USERS = [
     status: 'Active',
     allowedModules: [
       'dashboard', 'dailyRoute', 'customer360', 'staff', 'userManagement',
-      'onboarding', 'applications', 'payments', 'overdue', 'products', 'rbac', 'audit'
+      'onboarding', 'applications', 'payments', 'dayBook', 'overdue', 
+      'analytics', 'calendar', 'byajCalc', 'docsVault', 'notifications', 
+      'reports', 'products', 'rbac', 'audit'
     ],
     permissions: {
       canDisburseLoan: true,
@@ -513,60 +515,6 @@ export const INITIAL_APP_USERS = [
       canApproveLoan: true,
       canDeleteRecords: true,
       canExportReports: true
-    },
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'USR-002',
-    name: 'Rajesh Verma (Field Recovery)',
-    email: 'rajesh.agent@dhanshri.com',
-    phone: '+91 98111 22233',
-    role: 'Field Collection Agent',
-    passcode: '2233',
-    status: 'Active',
-    allowedModules: ['dashboard', 'dailyRoute', 'payments', 'overdue'],
-    permissions: {
-      canDisburseLoan: false,
-      canCollectPayment: true,
-      canApproveLoan: false,
-      canDeleteRecords: false,
-      canExportReports: false
-    },
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'USR-003',
-    name: 'Priya Sharma (Credit Underwriter)',
-    email: 'priya.credit@dhanshri.com',
-    phone: '+91 98222 33344',
-    role: 'Credit Underwriter',
-    passcode: '3344',
-    status: 'Active',
-    allowedModules: ['dashboard', 'customer360', 'onboarding', 'applications'],
-    permissions: {
-      canDisburseLoan: true,
-      canCollectPayment: false,
-      canApproveLoan: true,
-      canDeleteRecords: false,
-      canExportReports: true
-    },
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'USR-004',
-    name: 'Amit Patel (Cashier)',
-    email: 'amit.cashier@dhanshri.com',
-    phone: '+91 98333 44455',
-    role: 'Cashier',
-    passcode: '4455',
-    status: 'Active',
-    allowedModules: ['dashboard', 'dailyRoute', 'payments'],
-    permissions: {
-      canDisburseLoan: false,
-      canCollectPayment: true,
-      canApproveLoan: false,
-      canDeleteRecords: false,
-      canExportReports: false
     },
     createdAt: new Date().toISOString()
   }
